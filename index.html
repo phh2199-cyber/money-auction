@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>첫 월급 재테크 경매 · 게임 설명서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1E1B4B;--muted:#6B6894;--tint:#F5F3FF;--line:#E4E0FF;--pri:#6D5DFC;--amber:#F59E0B;--rose:#F43F5E;--teal:#14B8A6;--sky:#0EA5E9}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Gowun Dodum',system-ui,sans-serif;color:var(--ink);line-height:1.6;background:#fff;-webkit-font-smoothing:antialiased;position:relative;overflow-x:hidden;word-break:keep-all}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.28;z-index:0;pointer-events:none}
+.b1{width:320px;height:320px;background:#c4b5fd;top:-90px;right:-80px}
+.b2{width:280px;height:280px;background:#99f6e4;bottom:-90px;left:-90px}
+main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:20px 16px 50px}
+.card{background:rgba(245,243,255,.72);border:1px solid var(--line);border-radius:22px;padding:20px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 8px 28px rgba(109,93,252,.08);margin-bottom:16px}
+.white{background:rgba(255,255,255,.85)}
+.hero{display:flex;align-items:center;gap:14px;padding:22px}
+.hero .txt{flex:1;min-width:0}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px;color:var(--pri);margin-bottom:8px}
+h1{font-size:clamp(25px,6vw,36px);line-height:1.3}
+.hero p{color:var(--muted);margin-top:8px;font-size:15px}
+.hero p b{color:var(--pri)}
+.don{width:clamp(96px,24vw,150px);flex:none;animation:float 3s ease-in-out infinite}
+.don svg{width:100%;height:auto;display:block}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bubble{position:relative;display:inline-block;background:var(--pri);color:#fff;padding:10px 16px;border-radius:16px;font-size:15px;margin-bottom:14px}
+.bubble::after{content:"";position:absolute;left:24px;bottom:-8px;border:8px solid transparent;border-top-color:var(--pri);border-bottom:0}
+h2{font-size:21px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+h2 .no{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--pri);color:#fff;font-size:15px;flex:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 10px;text-align:center}
+.stat .ic{font-size:24px}
+.stat b{display:block;font-size:clamp(15px,4.4vw,22px);margin-top:2px;white-space:nowrap}
+.stat small{color:var(--muted);font-size:13px}
+.flow{display:flex;align-items:stretch;gap:6px;margin-top:12px}
+.flow div{flex:1;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;font-size:14px}
+.flow div b{display:block;color:var(--pri);font-size:12px}
+.flow i{align-self:center;color:var(--pri);font-style:normal}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.step{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.step .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:21px;flex:none;border:2px solid}
+.step small{font-size:12px;font-weight:700}
+.step b{display:block;font-size:16px}
+.step p{font-size:14px;color:var(--muted)}
+.tip{margin-top:12px;background:#FFFBEB;border:1px dashed #FCD34D;border-radius:16px;padding:14px 16px}
+.tip b{color:#B45309}
+ul.chk{list-style:none;margin-top:6px;display:flex;flex-direction:column;gap:4px}
+ul.chk li{padding-left:22px;position:relative;font-size:15px}
+ul.chk li::before{content:"✔";position:absolute;left:0;color:var(--teal)}
+.rules{display:flex;flex-direction:column;gap:8px}
+.rule{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15px}
+.rule span{font-size:22px;flex:none}
+.score{display:flex;flex-direction:column;gap:12px}
+.srow .top{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+.srow .top small{color:var(--muted);font-size:12px;margin-left:6px}
+.bar{height:10px;border-radius:99px;background:var(--tint);margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px}
+.secret{display:flex;align-items:center;gap:12px;margin-top:4px}
+.secret .don{width:84px;animation:none}
+.secret .bubble{margin:0}
+.secret .bubble::after{left:-8px;top:50%;bottom:auto;transform:translateY(-50%);border:8px solid transparent;border-right-color:var(--pri);border-left:0}
+.cta{display:block;text-align:center;margin-top:6px;padding:16px;border-radius:18px;background:linear-gradient(135deg,var(--pri),#5b8cff);color:#fff;text-decoration:none;font-size:17px;box-shadow:0 10px 24px rgba(109,93,252,.3)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
+@media (max-width:520px){
+  .steps{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow i{transform:rotate(90deg)}
+  .hero{padding:18px}
+  .stat{padding:12px 4px}
+  .stat small{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<main>
+  <section class="card hero">
+    <div class="txt">
+      <span class="pill">💸 신입공직자 금융 게임 · 설명서</span>
+      <h1>첫 월급으로<br>무엇을 사시겠습니까?</h1>
+      <p>가상자금으로 금융상품을 경매로 사고, 인생 이벤트로 결과를 확인해요. 승자는 돈이 가장 많은 팀이 아니라 <b>흔들려도 무너지지 않는 팀</b>입니다.</p>
+    </div>
+    <div class="don"><svg viewBox="60 40 340 455" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="경매사 돈쌤"><ellipse cx="200" cy="482" rx="120" ry="12" fill="#1E1B4B" opacity=".10"/> <!-- 몸통 --> <path d="M112 470 Q108 345 160 318 L240 318 Q292 345 288 470 Z" fill="#3730A3"/> <path d="M170 318 L200 400 L230 318 Z" fill="#FFFFFF"/> <path d="M160 318 L200 405 L178 470 L150 470 Q140 380 160 318 Z" fill="#2E2A8A"/> <path d="M240 318 L200 405 L222 470 L250 470 Q260 380 240 318 Z" fill="#2E2A8A"/> <circle cx="200" cy="420" r="6" fill="#FBBF24"/><circle cx="200" cy="445" r="6" fill="#FBBF24"/> <!-- 포켓치프 --> <path d="M238 372 L262 366 L258 380 Z" fill="#FB7185"/> <!-- 나비넥타이 --> <path d="M200 330 L172 316 L172 344 Z" fill="#F43F5E"/><path d="M200 330 L228 316 L228 344 Z" fill="#F43F5E"/> <circle cx="200" cy="330" r="8" fill="#BE123C"/> <!-- 왼팔(내림) --> <path d="M120 350 Q96 395 108 440" stroke="#3730A3" stroke-width="34" stroke-linecap="round" fill="none"/> <circle cx="110" cy="448" r="18" fill="#FFD7B5"/> <!-- 오른팔(망치 든 팔) --> <path d="M278 345 Q318 320 330 268" stroke="#3730A3" stroke-width="34" stroke-linecap="round" fill="none"/> <g transform="rotate(-28 336 250)"> <rect x="330" y="160" width="12" height="100" rx="6" fill="#92400E"/> <rect x="300" y="140" width="72" height="34" rx="10" fill="#B45309"/> <rect x="300" y="140" width="14" height="34" rx="5" fill="#FBBF24"/> <rect x="358" y="140" width="14" height="34" rx="5" fill="#FBBF24"/> </g> <circle cx="334" cy="256" r="19" fill="#FFD7B5"/> <!-- 목·머리 --> <rect x="184" y="292" width="32" height="30" rx="10" fill="#F5C29B"/> <circle cx="122" cy="222" r="16" fill="#FFD7B5"/><circle cx="278" cy="222" r="16" fill="#FFD7B5"/> <circle cx="200" cy="215" r="82" fill="#FFDDBF"/> <path d="M120 208 Q116 148 200 140 Q284 148 280 208 Q272 176 246 168 Q214 182 168 170 Q138 176 120 208 Z" fill="#3F2A1E"/> <!-- 눈썹 --> <path d="M150 188 Q166 178 182 186" stroke="#3F2A1E" stroke-width="6" stroke-linecap="round" fill="none"/> <path d="M218 186 Q234 178 250 188" stroke="#3F2A1E" stroke-width="6" stroke-linecap="round" fill="none"/> <!-- 동그란 안경 + 눈 --> <circle cx="166" cy="214" r="23" fill="#FFFFFF" fill-opacity=".35" stroke="#1E1B4B" stroke-width="5"/> <circle cx="234" cy="214" r="23" fill="#FFFFFF" fill-opacity=".35" stroke="#1E1B4B" stroke-width="5"/> <path d="M189 212 Q200 205 211 212" stroke="#1E1B4B" stroke-width="5" fill="none"/> <ellipse cx="166" cy="216" rx="7" ry="9" fill="#1E1B4B"/><circle cx="169" cy="212" r="2.6" fill="#fff"/> <ellipse cx="234" cy="216" rx="7" ry="9" fill="#1E1B4B"/><circle cx="237" cy="212" r="2.6" fill="#fff"/> <!-- 볼·입 --> <ellipse cx="142" cy="250" rx="13" ry="8" fill="#FB7185" opacity=".45"/> <ellipse cx="258" cy="250" rx="13" ry="8" fill="#FB7185" opacity=".45"/> <path d="M172 252 Q200 286 228 252 Z" fill="#9F1239"/> <path d="M184 266 Q200 278 216 266 Q200 262 184 266 Z" fill="#FB7185"/> <!-- 중절모 --> <g transform="rotate(-8 200 130)"> <ellipse cx="200" cy="138" rx="98" ry="16" fill="#1E1B4B"/> <path d="M140 136 L148 62 Q200 48 252 62 L260 136 Z" fill="#1E1B4B"/> <rect x="143" y="108" width="114" height="20" fill="#F59E0B"/> <circle cx="226" cy="118" r="17" fill="#FDE68A" stroke="#D97706" stroke-width="4"/> <text x="226" y="126" text-anchor="middle" font-family="Gowun Dodum, sans-serif" font-weight="700" font-size="22" fill="#B45309">₩</text> </g></svg></div>
+  </section>
+
+  <section class="card">
+    <div class="bubble">안녕하세요! 경매사 돈쌤이에요 🎩</div>
+    <h2><span class="no">1</span>게임 한눈에 보기</h2>
+    <div class="stats">
+      <div class="stat"><div class="ic">💰</div><b>1,000만원</b><small>팀별 시작 자금</small></div>
+      <div class="stat"><div class="ic">🔨</div><b>14개</b><small>경매 품목</small></div>
+      <div class="stat"><div class="ic">🃏</div><b>6장</b><small>인생 이벤트 카드</small></div>
+    </div>
+    <div class="flow">
+      <div><b>STEP 1</b>경매로 품목 사기</div><i>›</i>
+      <div><b>STEP 2</b>인생 이벤트 카드</div><i>›</i>
+      <div><b>STEP 3</b>결과·함께 돌아보기</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="bubble">더 없습니까? 하나, 둘, 셋! 🔨</div>
+    <h2><span class="no">2</span>경매는 이렇게 진행돼요</h2>
+    <div class="steps">
+      <div class="step"><div class="ic" style="border-color:var(--amber)">📣</div><div><small style="color:var(--amber)">STEP 1</small><b>품목 소개</b><p>돈쌤이 품목과 시작가를 알려줘요</p></div></div>
+      <div class="step"><div class="ic" style="border-color:var(--sky)">✋</div><div><small style="color:var(--sky)">STEP 2</small><b>손 들고 응찰</b><p>첫 팀은 시작가, 다음 팀은 +10 / +50 / +100만원</p></div></div>
+      <div class="step"><div class="ic" style="border-color:var(--rose)">⏱️</div><div><small style="color:var(--rose)">STEP 3</small><b>하나·둘·셋</b><p>더 부르는 팀이 없으면 카운트다운 후 낙찰!</p></div></div>
+      <div class="step"><div class="ic" style="border-color:var(--teal)">💡</div><div><small style="color:var(--teal)">STEP 4</small><b>가치 공개</b><p>실제 가치와 학습 노트(이유·관리 TIP) 공개</p></div></div>
+    </div>
+    <div class="tip"><b>⭐ 경매 꿀팁</b>
+      <ul class="chk">
+        <li>실제 가치는 낙찰 후 공개! 비싸게 사면 그만큼 손해예요</li>
+        <li>가진 현금까지만 응찰할 수 있어요</li>
+        <li>안 사는 것(유찰)도 훌륭한 전략!</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="no">3</span>인생 이벤트 카드</h2>
+    <p style="color:var(--muted);margin-bottom:10px">카드 한 장마다 보유 자산의 가치가 오르거나 내려요</p>
+    <div class="rules">
+      <div class="rule"><span>🛟</span>위기 지출은 비상금 → 현금 순서로 나가요</div>
+      <div class="rule"><span>⚠️</span>둘 다 없으면 가장 비싼 자산을 70% 가격에 헐값 매도!</div>
+      <div class="rule"><span>💳</span>할부·구독·보험료는 카드마다 자동으로 빠져나가요</div>
+    </div>
+  </section>
+
+  <section class="card white">
+    <h2><span class="no">4</span>최종 점수 100점</h2>
+    <div class="score">
+      <div class="srow"><div class="top"><span><b>💰 자산 규모</b><small>가장 많은 팀 기준</small></span><b style="color:var(--pri)">50점</b></div><div class="bar"><i style="width:100%;background:var(--pri)"></i></div></div>
+      <div class="srow"><div class="top"><span><b>🧱 안정성·분산</b><small>골고루 담았나</small></span><b style="color:var(--teal)">30점</b></div><div class="bar"><i style="width:60%;background:var(--teal)"></i></div></div>
+      <div class="srow"><div class="top"><span><b>🛡️ 위기 대응</b><small>헐값 매도 없이 버텼나</small></span><b style="color:var(--amber)">20점</b></div><div class="bar"><i style="width:40%;background:var(--amber)"></i></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="secret"><div class="don"><svg viewBox="60 40 340 455" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="경매사 돈쌤"><ellipse cx="200" cy="482" rx="120" ry="12" fill="#1E1B4B" opacity=".10"/> <!-- 몸통 --> <path d="M112 470 Q108 345 160 318 L240 318 Q292 345 288 470 Z" fill="#3730A3"/> <path d="M170 318 L200 400 L230 318 Z" fill="#FFFFFF"/> <path d="M160 318 L200 405 L178 470 L150 470 Q140 380 160 318 Z" fill="#2E2A8A"/> <path d="M240 318 L200 405 L222 470 L250 470 Q260 380 240 318 Z" fill="#2E2A8A"/> <circle cx="200" cy="420" r="6" fill="#FBBF24"/><circle cx="200" cy="445" r="6" fill="#FBBF24"/> <!-- 포켓치프 --> <path d="M238 372 L262 366 L258 380 Z" fill="#FB7185"/> <!-- 나비넥타이 --> <path d="M200 330 L172 316 L172 344 Z" fill="#F43F5E"/><path d="M200 330 L228 316 L228 344 Z" fill="#F43F5E"/> <circle cx="200" cy="330" r="8" fill="#BE123C"/> <!-- 왼팔(내림) --> <path d="M120 350 Q96 395 108 440" stroke="#3730A3" stroke-width="34" stroke-linecap="round" fill="none"/> <circle cx="110" cy="448" r="18" fill="#FFD7B5"/> <!-- 오른팔(망치 든 팔) --> <path d="M278 345 Q318 320 330 268" stroke="#3730A3" stroke-width="34" stroke-linecap="round" fill="none"/> <g transform="rotate(-28 336 250)"> <rect x="330" y="160" width="12" height="100" rx="6" fill="#92400E"/> <rect x="300" y="140" width="72" height="34" rx="10" fill="#B45309"/> <rect x="300" y="140" width="14" height="34" rx="5" fill="#FBBF24"/> <rect x="358" y="140" width="14" height="34" rx="5" fill="#FBBF24"/> </g> <circle cx="334" cy="256" r="19" fill="#FFD7B5"/> <!-- 목·머리 --> <rect x="184" y="292" width="32" height="30" rx="10" fill="#F5C29B"/> <circle cx="122" cy="222" r="16" fill="#FFD7B5"/><circle cx="278" cy="222" r="16" fill="#FFD7B5"/> <circle cx="200" cy="215" r="82" fill="#FFDDBF"/> <path d="M120 208 Q116 148 200 140 Q284 148 280 208 Q272 176 246 168 Q214 182 168 170 Q138 176 120 208 Z" fill="#3F2A1E"/> <!-- 눈썹 --> <path d="M150 188 Q166 178 182 186" stroke="#3F2A1E" stroke-width="6" stroke-linecap="round" fill="none"/> <path d="M218 186 Q234 178 250 188" stroke="#3F2A1E" stroke-width="6" stroke-linecap="round" fill="none"/> <!-- 동그란 안경 + 눈 --> <circle cx="166" cy="214" r="23" fill="#FFFFFF" fill-opacity=".35" stroke="#1E1B4B" stroke-width="5"/> <circle cx="234" cy="214" r="23" fill="#FFFFFF" fill-opacity=".35" stroke="#1E1B4B" stroke-width="5"/> <path d="M189 212 Q200 205 211 212" stroke="#1E1B4B" stroke-width="5" fill="none"/> <ellipse cx="166" cy="216" rx="7" ry="9" fill="#1E1B4B"/><circle cx="169" cy="212" r="2.6" fill="#fff"/> <ellipse cx="234" cy="216" rx="7" ry="9" fill="#1E1B4B"/><circle cx="237" cy="212" r="2.6" fill="#fff"/> <!-- 볼·입 --> <ellipse cx="142" cy="250" rx="13" ry="8" fill="#FB7185" opacity=".45"/> <ellipse cx="258" cy="250" rx="13" ry="8" fill="#FB7185" opacity=".45"/> <path d="M172 252 Q200 286 228 252 Z" fill="#9F1239"/> <path d="M184 266 Q200 278 216 266 Q200 262 184 266 Z" fill="#FB7185"/> <!-- 중절모 --> <g transform="rotate(-8 200 130)"> <ellipse cx="200" cy="138" rx="98" ry="16" fill="#1E1B4B"/> <path d="M140 136 L148 62 Q200 48 252 62 L260 136 Z" fill="#1E1B4B"/> <rect x="143" y="108" width="114" height="20" fill="#F59E0B"/> <circle cx="226" cy="118" r="17" fill="#FDE68A" stroke="#D97706" stroke-width="4"/> <text x="226" y="126" text-anchor="middle" font-family="Gowun Dodum, sans-serif" font-weight="700" font-size="22" fill="#B45309">₩</text> </g></svg></div><div class="bubble">쉿! 품목 중에 함정이 숨어 있어요 🤫</div></div>
+  </section>
+
+  <a class="cta" href="game.html">🎮 게임 화면 보러 가기</a>
+  <footer>첫 월급 재테크 경매 · 게임 설명서</footer>
+</main>
+</body>
+</html>

@@ -154,6 +154,9 @@ select option{color:#111}
 .mobqr{width:250px;max-width:100%;background:#fff;border-radius:18px;padding:10px;flex:none}
 .mobqr svg{width:100%;height:auto;display:block}
 .mobinfo{flex:1;min-width:220px}
+.mobst{display:inline-block;padding:6px 10px;border-radius:12px;font-size:13px;background:var(--glass2);border:1px solid var(--line)}
+.mobst.ok{background:rgba(94,234,212,.2);border-color:rgba(94,234,212,.6)}
+.mobst.bad{background:rgba(255,138,154,.18);border-color:rgba(255,138,154,.6);line-height:1.5}
 .mobinfo h3{font-size:19px;margin-bottom:8px}
 .mobinfo ol{padding-left:20px;margin:6px 0}
 .mobteams{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -3346,6 +3349,7 @@ const H={
   toggleVoice:()=>{S.setup.voice=!S.setup.voice;if(!S.setup.voice)hush();else AUTO.key=null;save();render()},
   pauseAuto:()=>{AUTO.paused=!AUTO.paused;if(AUTO.paused){resetAuto();stopCountdown();clockStop();AUTO.lot=null}else AUTO.key=null;render();toast(AUTO.paused?'일시정지했어요. 설명을 마치면 계속 진행을 눌러 주세요':'다시 진행합니다')},
   mobile:()=>mobOpen(),
+  mobRetry:()=>mobRetry(),
   sound:()=>{S.sound=!S.sound;initAudio();save();render();toast(S.sound?'효과음 켜짐':'효과음 꺼짐')},
   rules:()=>openModal(`<h2>📖 게임 규칙</h2>
     <ol>
@@ -3382,9 +3386,11 @@ function mobInit(){
   let id=null;try{id=sessionStorage.getItem('ma-host-id')}catch(e){}
   if(!id){id='ma-'+Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,6);}
   const start=pid=>{
+    MOB.id=pid;MOB.ok=false;MOB.err='';clearTimeout(MOB.wd);
+    MOB.wd=setTimeout(()=>{if(!MOB.ok){MOB.err='연결 서버(peerjs.com)가 응답하지 않아요. 노트북 인터넷을 확인하고 "다시 연결"을 눌러 주세요. 다른 와이파이나 휴대폰 핫스팟으로 바꾸면 해결되는 경우가 많아요.';mobRefresh()}},12000);
     let p;try{p=new Peer(pid,Object.assign({debug:0},window.__PEEROPTS||{}))}catch(e){MOB.err='휴대폰 연결을 시작하지 못했어요.';return}
     MOB.peer=p;
-    p.on('open',x=>{MOB.id=x;MOB.ok=true;MOB.err='';try{sessionStorage.setItem('ma-host-id',x)}catch(e){};mobRefresh()});
+    p.on('open',x=>{clearTimeout(MOB.wd);MOB.id=x;MOB.ok=true;MOB.err='';try{sessionStorage.setItem('ma-host-id',x)}catch(e){};mobRefresh()});
     p.on('connection',c=>{
       c.on('open',()=>{MOB.conns.push({c,team:null});mobSend(c);mobRefresh()});
       c.on('data',d=>mobOnData(c,d));
@@ -3394,7 +3400,7 @@ function mobInit(){
     p.on('disconnected',()=>{MOB.ok=false;mobRefresh();setTimeout(()=>{try{p.reconnect()}catch(e){}},2000)});
     p.on('error',e=>{
       if(e&&e.type==='unavailable-id'){try{p.destroy()}catch(_){};MOB.peer=null;try{sessionStorage.removeItem('ma-host-id')}catch(_){};start('ma-'+Math.random().toString(36).slice(2,10));return}
-      if(e&&(e.type==='network'||e.type==='server-error'||e.type==='socket-error'))MOB.err='휴대폰 연결 서버에 접속하지 못했어요. 인터넷 연결을 확인해 주세요.';
+      if(e&&e.type!=='peer-unavailable'&&!MOB.ok)MOB.err=`휴대폰 연결 서버에 접속하지 못했어요 (${e.type||'오류'}). 인터넷을 확인하고 "다시 연결"을 눌러 주세요.`;
       mobRefresh();
     });
   };
@@ -3456,8 +3462,8 @@ function mobRefresh(){
   mobBroadcast();
 }
 function mobPanel(){
-  if(MOB.err&&!MOB.ok)return `<p class="muted">⚠️ ${MOB.err}</p>`;
-  if(!MOB.ok||!MOB.id)return '<p class="muted">휴대폰 연결을 준비하는 중… 잠시만 기다려 주세요.</p>';
+  if(!MOB.id)return `<p class="muted">⚠️ ${MOB.err||'휴대폰 연결을 준비하는 중…'}</p>`;
+  const stat=MOB.ok?'<span class="mobst ok">● 연결 준비 완료 — 찍으면 바로 들어와요</span>':MOB.err?`<span class="mobst bad">⚠️ ${MOB.err}</span><button class="btn primary sm" data-action="mobRetry" style="margin-top:8px">🔄 다시 연결</button>`:'<span class="mobst">⏳ 연결 서버에 접속하는 중… (최대 10초)</span>';
   const url=joinURL();let svg='';
   try{const q=qrcode(0,'M');q.addData(url);q.make();svg=q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){}
   const teams=S.teams.length?`<div class="mobteams">${S.teams.map((t,i)=>`<span><i class="dot" style="background:${t.color};color:${t.color}"></i>${esc(t.name)} <b>${mobCount(i)?'📱×'+mobCount(i):'—'}</b></span>`).join('')}</div>`:'<p class="muted" style="font-size:13px">게임을 시작하면 휴대폰에서 팀을 고를 수 있어요.</p>';
@@ -3465,9 +3471,11 @@ function mobPanel(){
     <div class="mobinfo"><h3>팀 대표님, QR을 찍어 주세요!</h3>
       <ol><li>휴대폰 카메라로 QR 찍기</li><li>우리 팀 고르기</li><li>작전 타임 뒤 응찰 버튼 누르기</li></ol>
       <p class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</p>
+      <div style="margin:8px 0">${stat}</div>
       <p style="margin-top:8px">연결된 휴대폰 <b>${MOB.conns.length}대</b></p>${teams}
       <p class="muted" style="font-size:12px;margin-top:8px">연결이 잘 안 되면 와이파이를 끄고 휴대폰 데이터로 접속해 보세요. 손을 들면 강사님이 대신 눌러 주는 방식도 그대로 쓸 수 있어요.</p></div></div>`;
 }
+function mobRetry(){try{MOB.peer&&MOB.peer.destroy()}catch(e){};MOB.peer=null;MOB.ok=false;MOB.err='';MOB.id=null;try{sessionStorage.removeItem('ma-host-id')}catch(e){};mobInit();mobRefresh()}
 function mobOpen(){mobInit();openModal(`<h2>📱 휴대폰 응찰 참가</h2><div id="mobBody">${mobPanel()}</div>`,'<button class="btn primary" data-action="closeModal">닫기</button>');}
 
 render();

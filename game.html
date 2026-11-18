@@ -151,7 +151,7 @@ select option{color:#111}
 .mobn{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#22c55e;font-size:12px}
 .mobtag{margin-left:auto;font-size:12px;padding:2px 8px;border-radius:99px;background:rgba(34,197,94,.25);border:1px solid rgba(34,197,94,.6)}
 .mobwrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
-.mobqr{width:250px;max-width:100%;background:#fff;border-radius:18px;padding:10px;flex:none}
+.mobqr{width:300px;max-width:100%;background:#fff;border-radius:18px;padding:10px;flex:none}
 .mobqr svg{width:100%;height:auto;display:block}
 .mobinfo{flex:1;min-width:220px}
 .mobst{display:inline-block;padding:6px 10px;border-radius:12px;font-size:13px;background:var(--glass2);border:1px solid var(--line)}
@@ -3392,7 +3392,12 @@ document.getElementById('hammerChar').innerHTML=donSvg('60 40 340 455');
 const BROKERS=(window.__BROKERS||['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081']);
 const MOB={client:null,room:null,bi:0,ok:false,err:'',trying:false,clients:{},lastSent:0,timer:null,wd:null};
 const mobBase=()=>`wemi-money-auction/v1/${MOB.room}`;
-function joinURL(){try{return new URL('join.html',location.href).href.split('#')[0]+'#'+MOB.room+'~'+MOB.bi}catch(e){return ''}}
+const JOIN_SITE='https://phh2199-cyber.github.io/money-auction/join.html';
+function joinURL(){
+  let base=JOIN_SITE;
+  try{if(/^https?:$/.test(location.protocol)&&!/claude/.test(location.hostname))base=new URL('join.html',location.href).href.split('#')[0]}catch(e){}
+  return base+'#'+MOB.room+'~'+MOB.bi;
+}
 function mobInit(){
   if(/claude\.ai|claudeusercontent|claude\.site/.test(location.hostname)){MOB.err='휴대폰 응찰은 GitHub 사이트 주소(phh2199-cyber.github.io/money-auction/game.html)에서 열었을 때 작동해요.';return}
   if(typeof mqtt==='undefined'){MOB.err='연결 기능을 불러오지 못했어요. 새로고침해 주세요.';return}
@@ -3487,7 +3492,7 @@ function mobRefresh(quiet){
 function mobPanel(){
   if(!MOB.room)return `<p class="muted">⚠️ ${MOB.err||'휴대폰 연결을 준비하는 중…'}</p>`;
   const url=joinURL();let svg='';
-  try{const q=qrcode(0,'M');q.addData(url);q.make();svg=q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){}
+  try{const q=qrcode(0,'L');q.addData(url);q.make();svg=q.createSvgTag({cellSize:6,margin:2,scalable:true})}catch(e){}
   const stat=MOB.ok?'<span class="mobst ok">● 연결 준비 완료 — 찍으면 바로 들어와요</span>'
     :MOB.err?`<span class="mobst bad">⚠️ ${MOB.err}</span><br><button class="btn primary sm" data-action="mobRetry" style="margin-top:8px">🔄 다시 연결</button>`
     :`<span class="mobst">⏳ 연결 서버 ${MOB.bi+1}/${BROKERS.length}번에 접속하는 중…</span>`;

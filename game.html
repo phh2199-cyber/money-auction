@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>첫 월급 재테크 경매 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0f1430; --bg2:#1d1442; --ink:#f4f5ff; --muted:rgba(244,245,255,.68);
+  --glass:rgba(255,255,255,.08); --glass2:rgba(255,255,255,.14); --line:rgba(255,255,255,.18);
+  --pri:#8b7bff; --pri2:#5ee0ff; --good:#5eead4; --bad:#ff8a9a; --warn:#fcd34d;
+  --r:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  font-family:'Gowun Dodum',system-ui,sans-serif; color:var(--ink); line-height:1.55;
+  background:radial-gradient(1200px 700px at 10% -10%,#3a2b8f 0%,transparent 60%),
+             radial-gradient(900px 600px at 110% 20%,#0e6e8c 0%,transparent 55%),
+             linear-gradient(160deg,var(--bg1),var(--bg2));
+  background-attachment:fixed; overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:999; opacity:.16; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.45;z-index:-1;pointer-events:none}
+.b1{width:380px;height:380px;background:#ff8fab;top:55%;left:-120px}
+.b2{width:420px;height:420px;background:#6d5dfc;top:-120px;right:15%}
+.b3{width:320px;height:320px;background:#2dd4bf;bottom:-120px;right:-80px}
+.glass{
+  background:var(--glass); border:1px solid var(--line); border-radius:var(--r);
+  backdrop-filter:blur(18px) saturate(140%); -webkit-backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 12px 40px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15);
+}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none}
+input,select{font-family:inherit;color:var(--ink)}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 18px 60px}
+.pad{padding:22px}
+h1{font-size:clamp(28px,4.6vw,46px);line-height:1.25;letter-spacing:-.5px}
+h2{font-size:20px;margin-bottom:14px}
+h3{font-size:17px}
+.muted{color:var(--muted)}
+.pill{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--glass2);border:1px solid var(--line);font-size:13px;margin-bottom:12px}
+
+/* 상단 바 */
+.top{position:sticky;top:10px;z-index:50;margin:10px auto 0;max-width:1280px;width:calc(100% - 24px);
+  display:flex;align-items:center;gap:14px;padding:10px 14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{font-size:28px}
+.brand b{display:block;font-size:17px}
+.brand small{color:var(--muted);font-size:12px}
+.steps{display:flex;gap:6px;flex:1;justify-content:center;overflow-x:auto;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.step{padding:8px 14px;border-radius:999px;font-size:14px;white-space:nowrap;border:1px solid transparent;color:var(--muted);transition:.2s}
+.step.on{background:linear-gradient(135deg,rgba(139,123,255,.55),rgba(94,224,255,.4));color:#fff;border-color:var(--line)}
+.step:hover{color:#fff}
+.tools{display:flex;gap:6px}
+
+/* 버튼 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border-radius:16px;font-size:15px;transition:.18s;border:1px solid var(--line)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:linear-gradient(135deg,var(--pri),#5b8cff);border-color:rgba(255,255,255,.3);box-shadow:0 8px 24px rgba(109,93,252,.45)}
+.btn.good{background:linear-gradient(135deg,#14b8a6,#22c55e);border-color:rgba(255,255,255,.3)}
+.btn.warn{background:linear-gradient(135deg,#f59e0b,#f97316);border-color:rgba(255,255,255,.3)}
+.btn.ghost{background:var(--glass)}
+.btn.danger{background:rgba(255,138,154,.2);border-color:rgba(255,138,154,.5)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:12px}
+.btn.lg{padding:16px 28px;font-size:17px}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* 설정 */
+.hero{display:flex;align-items:center;gap:20px;padding:30px;margin-bottom:18px}
+.hero-txt{flex:1}
+.hero p{color:var(--muted);margin-top:12px;max-width:640px}
+.hero-emoji{font-size:clamp(60px,10vw,110px);filter:drop-shadow(0 10px 30px rgba(0,0,0,.4))}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.field:last-of-type{border-bottom:none}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:36px;height:36px;border-radius:12px;background:var(--glass2);border:1px solid var(--line);font-size:18px}
+.stepper b{min-width:56px;text-align:center}
+select,.inp{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;outline:none}
+select option{color:#111}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.names label{display:flex;align-items:center;gap:8px}
+.names .inp{width:100%}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 10px currentColor}
+.cta{display:flex;justify-content:center;gap:10px;margin-top:22px;flex-wrap:wrap}
+
+/* 경매사 */
+.host{display:flex;align-items:center;gap:16px;padding:14px 18px;margin-bottom:16px}
+.avatar{width:96px;height:96px;flex:none;border-radius:50%;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 50% 35%,#ffffff 0%,#e9e7ff 70%);border:3px solid rgba(255,255,255,.7);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.avatar svg{position:absolute;inset:4px 0 0 0;width:100%;height:100%}
+.gv{transform-box:view-box;transform-origin:278px 345px}
+.avatar.talk{animation:bob .5s ease}
+.avatar.strike .gv,#hammer svg.hit .gv{animation:strike2 .45s ease 2}
+.hero-char{width:clamp(130px,18vw,210px);flex:none;filter:drop-shadow(0 14px 30px rgba(0,0,0,.35));animation:float 3s ease-in-out infinite}
+.hero-char svg{width:100%;height:auto;display:block}
+#hammer .h svg{width:150px;height:auto;display:block}
+@keyframes strike2{0%{transform:rotate(0)}40%{transform:rotate(22deg)}70%{transform:rotate(-8deg)}100%{transform:rotate(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.hostname{font-size:12px;color:var(--muted);margin-bottom:4px}
+.bubble{position:relative;flex:1;padding:14px 18px;border-radius:18px;background:rgba(255,255,255,.92);color:#1e1b3a;font-size:clamp(16px,2.2vw,21px);line-height:1.45;animation:pop .35s ease}
+.bubble::before{content:"";position:absolute;left:-9px;top:24px;border:9px solid transparent;border-right-color:rgba(255,255,255,.92);border-left:0}
+.bubble b{color:#5b3df5}
+@keyframes bob{0%,100%{transform:none}50%{transform:translateY(-5px) rotate(-3deg)}}
+@keyframes strike{0%{transform:rotate(0)}40%{transform:rotate(-45deg)}70%{transform:rotate(15deg)}100%{transform:rotate(0)}}
+
+/* 경매 */
+.auction{display:grid;grid-template-columns:1fr 1.15fr;gap:18px}
+.itemcard{padding:26px;position:relative;overflow:hidden}
+.itemcard .big{font-size:clamp(60px,8vw,88px);line-height:1}
+.itemcard h2{font-size:clamp(24px,3.2vw,32px);margin:12px 0 4px}
+.itemcard .sub{color:var(--muted)}
+.itemcard .desc{margin-top:16px;padding:14px 16px;border-radius:16px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+.lot{position:absolute;top:18px;right:20px;font-size:13px;color:var(--muted)}
+.tag{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);margin-right:6px}
+.tag.safe{background:rgba(94,234,212,.18)}
+.tag.mid{background:rgba(125,211,252,.18)}
+.tag.risk{background:rgba(252,211,77,.2)}
+.tag.trap{background:rgba(255,138,154,.2)}
+.secret{margin-top:16px;display:flex;align-items:center;gap:10px;font-size:15px;flex-wrap:wrap}
+.secret b{font-size:20px;letter-spacing:1px}
+.ctrl{padding:22px;display:flex;flex-direction:column;gap:14px}
+.pricebox{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(139,123,255,.3),rgba(94,224,255,.15));border:1px solid var(--line)}
+.pricebox small{color:var(--muted);display:block;font-size:13px}
+.pricebox .p{font-size:clamp(30px,4.4vw,44px);line-height:1.1}
+.pricebox .who{text-align:right;font-size:17px}
+.pricebox.flash{animation:flash .5s ease}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(252,211,77,.8)}100%{box-shadow:0 0 0 18px rgba(252,211,77,0)}}
+.cd{display:flex;gap:6px;justify-content:center}
+.cd i{width:46px;height:8px;border-radius:99px;background:rgba(255,255,255,.15);transition:.3s}
+.cd i.on{background:linear-gradient(90deg,#f59e0b,#ff8fab)}
+.bidrows{display:flex;flex-direction:column;gap:8px}
+.brow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;background:rgba(0,0,0,.18);border:1px solid var(--line);transition:.2s}
+.brow.lead{border-color:#fcd34d;background:rgba(252,211,77,.14)}
+.brow .tn{flex:1;min-width:0}
+.brow .tn b{display:flex;align-items:center;gap:6px;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .tn small{color:var(--muted);font-size:12px}
+.brow .bb{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.brow .bb .btn{padding:8px 11px;font-size:14px;border-radius:12px}
+.crown{font-size:13px;padding:6px 10px;border-radius:10px;background:rgba(252,211,77,.25)}
+.actions{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
+.log{font-size:13px;color:var(--muted);max-height:70px;overflow:auto;display:flex;flex-wrap:wrap;gap:4px 10px}
+.reveal{padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(139,123,255,.25),rgba(94,224,255,.15));border:1px solid var(--line);animation:pop .4s ease}
+.reveal .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line)}
+.reveal .row:last-of-type{border-bottom:none}
+.verdict{margin-top:10px;font-size:17px}
+.hot{color:var(--bad)} .cool{color:var(--good)}
+.lots{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.lotchip{padding:6px 10px;border-radius:12px;font-size:13px;background:var(--glass);border:1px solid var(--line)}
+.lotchip.cur{border-color:#fff;background:var(--glass2)}
+.lotchip.sold{opacity:.55}
+.lotchip.passed{border-style:dashed}
+
+/* 학습 노트 */
+.learn{padding:18px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(94,234,212,.45);animation:pop .45s ease .1s both}
+.learn .lh{display:flex;align-items:center;gap:8px;font-size:16px;margin-bottom:10px}
+.learn .lh span{padding:3px 10px;border-radius:999px;background:rgba(94,234,212,.22);font-size:12px}
+.lsec{padding:10px 0;border-top:1px dashed var(--line)}
+.lsec:first-of-type{border-top:none;padding-top:0}
+.lsec b{display:block;margin-bottom:4px;font-size:15px}
+.lsec p{font-size:15px;color:rgba(244,245,255,.9)}
+.lsec ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.lsec li{font-size:15px;padding-left:22px;position:relative}
+.lsec li::before{content:"✔";position:absolute;left:0;color:var(--good)}
+
+/* 보드 */
+.boardtitle{display:flex;justify-content:space-between;align-items:center;margin:24px 0 10px}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.tcard{padding:14px 16px}
+.tcard .nm{display:flex;align-items:center;gap:8px;font-size:16px}
+.tcard .money{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;margin-top:8px;font-size:13px;color:var(--muted)}
+.tcard .money span{white-space:nowrap}
+.tcard .money b{color:var(--ink);font-size:15px}
+.tcard .its{margin-top:8px;font-size:20px;letter-spacing:2px;min-height:28px}
+.tcard .its .dead{opacity:.25;filter:grayscale(1)}
+
+/* 이벤트 */
+.eventgrid{display:grid;grid-template-columns:1fr 1.2fr;gap:18px}
+.stage{padding:22px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.progress{width:100%;display:flex;gap:6px}
+.progress i{flex:1;height:8px;border-radius:99px;background:rgba(255,255,255,.12)}
+.progress i.on{background:linear-gradient(90deg,var(--pri),var(--pri2))}
+.flip{perspective:1200px;width:100%;max-width:360px;aspect-ratio:3/4}
+.card3d{position:relative;width:100%;height:100%;transition:transform .8s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.card3d.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:26px;border:1px solid var(--line);padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.back{background:linear-gradient(145deg,rgba(139,123,255,.55),rgba(94,224,255,.3));box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.back .q{font-size:110px;line-height:1;opacity:.9}
+.back small{letter-spacing:6px;margin-top:10px;opacity:.85}
+.front{transform:rotateY(180deg);background:linear-gradient(160deg,rgba(255,255,255,.2),rgba(255,255,255,.06));backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.front .em{font-size:76px}
+.front h2{font-size:clamp(22px,3vw,28px);margin:8px 0}
+.front p{color:var(--muted);font-size:15px}
+.lesson{margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(0,0,0,.25);font-size:14px;text-align:left}
+.results{padding:22px;display:flex;flex-direction:column;gap:10px}
+.rrow{padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid var(--line);animation:pop .4s ease both}
+.rrow .hd{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rrow ul{list-style:none;margin-top:6px;font-size:14px;color:var(--muted)}
+.rrow li{padding:2px 0}
+.delta{font-size:15px;white-space:nowrap}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+
+/* 결과 */
+.podium{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.rank{padding:20px;position:relative}
+.rank .medal{font-size:34px;position:absolute;top:14px;right:16px}
+.rank .total{font-size:44px;line-height:1.1;margin:6px 0 10px}
+.rank .total small{font-size:16px;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bars label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.bar{height:9px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--pri),var(--pri2));transition:width 1s}
+.bar.g i{background:linear-gradient(90deg,#14b8a6,#86efac)}
+.bar.y i{background:linear-gradient(90deg,#f59e0b,#fcd34d)}
+.insight{list-style:none;margin-top:12px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.debrief{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:18px}
+.qlist{list-style:none;counter-reset:q;display:flex;flex-direction:column;gap:10px}
+.qlist li{counter-increment:q;padding:12px 14px 12px 50px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid var(--line);position:relative}
+.qlist li::before{content:counter(q);position:absolute;left:14px;top:12px;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri2));display:grid;place-items:center;font-size:13px}
+.qlist small{display:block;color:var(--muted);margin-top:4px}
+.pyramid{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:6px}
+.pyramid div{padding:12px;border-radius:14px;text-align:center;border:1px solid var(--line)}
+.pyramid .p3{width:55%;background:rgba(252,211,77,.2)}
+.pyramid .p2{width:75%;background:rgba(125,211,252,.2)}
+.pyramid .p1{width:95%;background:rgba(94,234,212,.22)}
+.notes{margin-top:18px}
+.todo{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.todo div{padding:16px 12px;border-radius:16px;background:rgba(0,0,0,.18);border:1px solid var(--line);text-align:center;font-size:14px}
+.todo b{display:grid;place-items:center;width:30px;height:30px;margin:0 auto 8px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri2));font-size:14px}
+.promise{margin-top:14px;padding:14px 16px;border-radius:16px;background:rgba(252,211,77,.12);border:1px dashed rgba(252,211,77,.6);font-size:15px}
+.promise b{color:var(--warn);margin-right:6px}
+.promise u{text-decoration:none;border-bottom:2px solid rgba(255,255,255,.6);display:inline-block;min-width:60px}
+.notegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+details.note{border-radius:16px;background:rgba(0,0,0,.18);border:1px solid var(--line);padding:12px 14px}
+details.note summary{cursor:pointer;font-size:16px;list-style:none;display:flex;align-items:center;gap:8px}
+details.note summary::-webkit-details-marker{display:none}
+details.note summary::after{content:"＋";margin-left:auto;color:var(--muted)}
+details.note[open] summary::after{content:"－"}
+details.note .learn{margin-top:10px;animation:none}
+
+/* 낙찰 연출 */
+#hammer{position:fixed;inset:0;display:grid;place-items:center;z-index:400;pointer-events:none;opacity:0;transition:opacity .2s}
+#hammer.show{opacity:1}
+#hammer .stamp{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 46px;border-radius:30px;background:rgba(20,16,50,.75);border:2px solid rgba(252,211,77,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#hammer .t{font-size:clamp(36px,6vw,60px);color:#fcd34d;letter-spacing:4px}
+#hammer .s{font-size:20px}
+
+/* 모달·토스트 */
+.modal{position:fixed;inset:0;background:rgba(5,6,20,.55);display:grid;place-items:center;z-index:200;padding:18px;backdrop-filter:blur(6px)}
+.modal[hidden]{display:none}
+.modal-card{max-width:580px;width:100%;padding:26px;max-height:88vh;overflow:auto;animation:pop .3s ease}
+.modal-card ol,.modal-card ul{padding-left:20px;display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);opacity:0;padding:12px 20px;border-radius:14px;background:rgba(20,20,40,.85);border:1px solid var(--line);transition:.3s;z-index:300;pointer-events:none;font-size:14px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:none}}
+
+@media (max-width:900px){
+  .todo{grid-template-columns:repeat(3,1fr)}
+  .auction,.eventgrid,.grid2,.debrief{grid-template-columns:1fr}
+  .top{position:static}
+  .steps{order:3;flex-basis:100%;justify-content:flex-start}
+}
+@media (max-width:520px){
+  .wrap{padding:12px 12px 50px}
+  .hero{flex-direction:column-reverse;text-align:center;padding:22px}
+  .names{grid-template-columns:1fr}
+  .pad,.ctrl,.itemcard,.results,.stage{padding:16px}
+  .board{grid-template-columns:1fr 1fr}
+  .tcard{padding:12px}
+  .tools .btn span{display:none}
+  .host{padding:12px;gap:10px}
+  .avatar{width:66px;height:66px}
+  .hero-char{width:130px}
+  .brow{flex-wrap:wrap}
+  .brow .bb{width:100%}
+  .brow .bb .btn{flex:1}
+  .actions{grid-template-columns:1fr 1fr}
+  .actions .btn:first-child{grid-column:1/-1}
+  .notegrid{grid-template-columns:1fr}
+  .todo{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<header class="top glass">
+  <a class="brand" href="index.html" style="color:inherit;text-decoration:none" title="게임 설명서 보기"><span class="logo">💸</span><div><b>첫 월급 재테크 경매</b><small>신입공직자 금융 게임 · 설명서 보기</small></div></a>
+  <nav id="steps" class="steps"></nav>
+  <div class="tools">
+    <button class="btn ghost sm" data-action="undo">↩<span> 되돌리기</span></button>
+    <button class="btn ghost sm" data-action="sound" id="soundBtn">🔊</button>
+    <button class="btn ghost sm" data-action="rules">📖<span> 규칙</span></button>
+    <button class="btn ghost sm" data-action="full">⛶<span> 전체화면</span></button>
+  </div>
+</header>
+
+<main id="app" class="wrap"></main>
+
+<div id="hammer"><div class="stamp"><div class="h" id="hammerChar"></div><div class="t">낙 찰 !</div><div class="s" id="hammerSub"></div></div></div>
+<div id="modal" class="modal" hidden><div class="modal-card glass"><div id="modalBody"></div><div class="mfoot" id="modalFoot"></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ===================== 데이터 ===================== */
+const KEY='fintech-auction-v3';
+const COLORS=['#ff8fab','#7dd3fc','#fcd34d','#86efac','#c4b5fd','#fdba74','#67e8f9','#f9a8d4','#a3e635','#fb7185'];
+const DEFAULT_NAMES=['청렴팀','소통팀','혁신팀','공감팀','열정팀','신뢰팀','도전팀','미래팀','나눔팀','희망팀'];
+const RISK={safe:'안전·저축',mid:'노후·성장',trap:'소비·함정'};
+const HOST='경매사 돈쌤';
+const DON_INNER=`<ellipse cx="200" cy="482" rx="120" ry="12" fill="#1E1B4B" opacity=".10"/> <!-- 몸통 --> <path d="M112 470 Q108 345 160 318 L240 318 Q292 345 288 470 Z" fill="#3730A3"/> <path d="M170 318 L200 400 L230 318 Z" fill="#FFFFFF"/> <path d="M160 318 L200 405 L178 470 L150 470 Q140 380 160 318 Z" fill="#2E2A8A"/> <path d="M240 318 L200 405 L222 470 L250 470 Q260 380 240 318 Z" fill="#2E2A8A"/> <circle cx="200" cy="420" r="6" fill="#FBBF24"/><circle cx="200" cy="445" r="6" fill="#FBBF24"/> <!-- 포켓치프 --> <path d="M238 372 L262 366 L258 380 Z" fill="#FB7185"/> <!-- 나비넥타이 --> <path d="M200 330 L172 316 L172 344 Z" fill="#F43F5E"/><path d="M200 330 L228 316 L228 344 Z" fill="#F43F5E"/> <circle cx="200" cy="330" r="8" fill="#BE123C"/> <!-- 왼팔(내림) --> <path d="M120 350 Q96 395 108 440" stroke="#3730A3" stroke-width="34" stroke-linecap="round" fill="none"/> <circle cx="110" cy="448" r="18" fill="#FFD7B5"/> <g class="gv"><!-- 오른팔(망치 든 팔) --> <path d="M278 345 Q318 320 330 268" stroke="#3730A3" stroke-width="34" stroke-linecap="round" fill="none"/> <g transform="rotate(-28 336 250)"> <rect x="330" y="160" width="12" height="100" rx="6" fill="#92400E"/> <rect x="300" y="140" width="72" height="34" rx="10" fill="#B45309"/> <rect x="300" y="140" width="14" height="34" rx="5" fill="#FBBF24"/> <rect x="358" y="140" width="14" height="34" rx="5" fill="#FBBF24"/> </g> <circle cx="334" cy="256" r="19" fill="#FFD7B5"/> </g><!-- 목·머리 --> <rect x="184" y="292" width="32" height="30" rx="10" fill="#F5C29B"/> <circle cx="122" cy="222" r="16" fill="#FFD7B5"/><circle cx="278" cy="222" r="16" fill="#FFD7B5"/> <circle cx="200" cy="215" r="82" fill="#FFDDBF"/> <path d="M120 208 Q116 148 200 140 Q284 148 280 208 Q272 176 246 168 Q214 182 168 170 Q138 176 120 208 Z" fill="#3F2A1E"/> <!-- 눈썹 --> <path d="M150 188 Q166 178 182 186" stroke="#3F2A1E" stroke-width="6" stroke-linecap="round" fill="none"/> <path d="M218 186 Q234 178 250 188" stroke="#3F2A1E" stroke-width="6" stroke-linecap="round" fill="none"/> <!-- 동그란 안경 + 눈 --> <circle cx="166" cy="214" r="23" fill="#FFFFFF" fill-opacity=".35" stroke="#1E1B4B" stroke-width="5"/> <circle cx="234" cy="214" r="23" fill="#FFFFFF" fill-opacity=".35" stroke="#1E1B4B" stroke-width="5"/> <path d="M189 212 Q200 205 211 212" stroke="#1E1B4B" stroke-width="5" fill="none"/> <ellipse cx="166" cy="216" rx="7" ry="9" fill="#1E1B4B"/><circle cx="169" cy="212" r="2.6" fill="#fff"/> <ellipse cx="234" cy="216" rx="7" ry="9" fill="#1E1B4B"/><circle cx="237" cy="212" r="2.6" fill="#fff"/> <!-- 볼·입 --> <ellipse cx="142" cy="250" rx="13" ry="8" fill="#FB7185" opacity=".45"/> <ellipse cx="258" cy="250" rx="13" ry="8" fill="#FB7185" opacity=".45"/> <path d="M172 252 Q200 286 228 252 Z" fill="#9F1239"/> <path d="M184 266 Q200 278 216 266 Q200 262 184 266 Z" fill="#FB7185"/> <!-- 중절모 --> <g transform="rotate(-8 200 130)"> <ellipse cx="200" cy="138" rx="98" ry="16" fill="#1E1B4B"/> <path d="M140 136 L148 62 Q200 48 252 62 L260 136 Z" fill="#1E1B4B"/> <rect x="143" y="108" width="114" height="20" fill="#F59E0B"/> <circle cx="226" cy="118" r="17" fill="#FDE68A" stroke="#D97706" stroke-width="4"/> <text x="226" y="126" text-anchor="middle" font-family="Gowun Dodum, sans-serif" font-weight="700" font-size="22" fill="#B45309">₩</text> </g>`;
+const donSvg=(vb,cls)=>`<svg class="${cls||''}" viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="경매사 돈쌤">${DON_INNER}</svg>`;
+
+
+const P0='OPENING · 공무원 재무의 강점',P1='PART 1 · 월급 통장의 주인 되기',P2='PART 2 · 내 꿈에 가격표 붙이기',P3='PART 3 · 숨은 세금 돌려받기',P4='PART 4 · 투자 3원칙',P5='PART 5 · 나라가 얹어주는 돈';
+const ITEMS=[
+ {id:'cheong',emoji:'🏠',name:'청년주택드림청약통장',sub:'내 집 마련의 첫걸음',value:300,risk:'safe',tags:['saving','cheong'],part:P5,
+  desc:'꾸준히 넣으면 청약 자격이 쌓입니다. 특정 이벤트에서 가치가 크게 오를 수 있어요.',
+  why:'통장에 쌓이는 돈은 원금과 이자 정도입니다. 하지만 오래, 꾸준히 넣을수록 청약 자격(납입 기간·횟수)이 쌓여 "내 집 마련 기회"라는 숨은 가치가 커집니다. 우대금리, 이자 비과세, 소득공제까지 더해지는 청년 우대 상품이에요.',
+  tips:['청약통장은 "지금" 시작하세요. 기존 청약통장도 전환할 수 있어요.','월 25만 원까지 납입이 인정되니 꾸준함이 핵심입니다.','무주택 세대주라면 연말정산 소득공제(연 300만 원 한도 40%)도 챙기세요.']},
+ {id:'subscribe',emoji:'📺',name:'구독 서비스 풀패키지',sub:'OTT·음악·배달 멤버십 한 번에',value:30,risk:'trap',tags:['fee'],part:P1,monthly:{amt:10,label:'구독료 자동결제'},
+  desc:'클릭 한 번이면 끝! 이벤트 카드마다 구독료 10만원이 자동으로 빠져나갑니다.',
+  why:'구독은 사는 순간 "자산"이 아니라 매달 나가는 "고정지출"이 됩니다. 클릭 한 번 결제는 지출 감각을 무디게 만들어, 쓰지 않는 서비스까지 계속 돈이 새어 나가요.',
+  tips:['한 달에 한 번 카드 명세서에서 구독 목록을 점검하세요.','안 쓰는 구독은 바로 해지하고, 필요할 때만 다시 가입하세요.','작은 고정지출도 1년, 10년이 쌓이면 큰돈입니다.']},
+ {id:'emer',emoji:'🛟',name:'비상금 파킹통장',sub:'생활비 3~6개월치',value:200,risk:'safe',tags:['saving','protect'],part:P1,
+  desc:'위기 카드가 오면 현금보다 먼저 비상금에서 빠져나가 다른 자산을 지켜줍니다.',
+  why:'수익은 거의 없지만, 갑작스러운 지출이 생겼을 때 적금을 깨거나 자산을 헐값에 팔지 않게 해 주는 "방패"입니다. 가치는 숫자보다 위기 때 드러나요.',
+  tips:['월 생활비의 3~6개월치를 목표로 모으세요.','입출금이 자유로운 파킹통장에 월급 통장과 분리해 두세요.','쓰고 나면 반드시 다시 채우세요. 비상금은 "여윳돈"이 아닙니다.']},
+ {id:'youth',emoji:'🌱',name:'청년미래적금',sub:'정부 기여금 + 비과세',value:300,risk:'safe',tags:['saving','youth'],part:P2,
+  desc:'청년을 위한 정책 적금입니다. 내가 넣은 돈에 정부가 돈을 얹어 줍니다.',
+  why:'원금이 안전한 적금인데, 정부 기여금과 비과세 혜택이 더해져 일반 적금보다 실제 수익이 커집니다. 결혼·독립처럼 "쓸 날짜가 정해진 돈"을 모으기에 알맞아요.',
+  tips:['월 최대 50만 원·3년 구조이니 만기까지 유지할 수 있는 금액으로 시작하세요.','모집 시기를 놓치지 않도록 알림을 신청해 두세요.','쓸 날짜가 정해진 돈은 "잃지 않는 것"이 수익입니다.']},
+ {id:'luxury',emoji:'👜',name:'명품 가방 (12개월 무이자)',sub:'첫 월급 기념 플렉스',value:200,risk:'trap',tags:['luxury'],part:P1,monthly:{amt:15,label:'명품 할부금'},
+  desc:'무이자니까 괜찮겠죠? 이벤트 카드마다 할부금 15만원이 빠져나갑니다.',
+  why:'무이자 할부는 다음 달 월급을 미리 쓰는 구조라 결국 고정지출이 됩니다. 게다가 명품은 사는 순간 중고가 되어 되팔 때 가격이 크게 떨어져요. 경매에서 비싸게 샀다면 분위기에 휩쓸린 소비 심리가 작동한 것입니다.',
+  tips:['사고 싶다면 소비 통장에 미리 모아서 일시불로 사세요.','"무이자"도 할부입니다. 할부가 쌓이면 다음 달 월급이 미리 사라져요.','48시간 규칙: 이틀 뒤에도 갖고 싶으면 그때 사세요.']},
+ {id:'gonje',emoji:'🏛️',name:'행정공제회 목돈예탁',sub:'지방공무원 전용 저축',value:300,risk:'safe',tags:['saving','gonje'],part:P0,
+  desc:'공무원만 가입할 수 있는 목돈 마련 상품입니다. 시간이 지날수록 이자가 쌓입니다.',
+  why:'공무원 회원을 위한 저축 제도로, 급여에서 자동으로 저축되고 이자가 복리로 쌓입니다. "예측 가능한 소득"이라는 공무원의 강점을 자동 저축으로 바꾸는 대표적인 방법이에요.',
+  tips:['가입 조건, 금리, 중도 인출 규정은 공제회 안내에서 직접 확인하세요.','급여에서 바로 빠져나가 "강제 저축" 효과가 큽니다.','복지포인트·단체보험 같은 공무원 복지 제도도 함께 챙기세요.']},
+ {id:'scam',emoji:'🎁',name:'"원금 보장 월 5%" 리딩방',sub:'선배가 몰래 알려준 기회',value:300,risk:'trap',tags:['scam'],part:P4,
+  desc:'원금을 보장하고 매달 5%를 준다고 합니다. 정말일까요?',
+  why:'위험과 수익은 함께 갑니다. 월 5%는 1년이면 원금의 60%가 넘는 수익인데, 원금 보장과 고수익은 동시에 성립할 수 없어요. 초기 배당은 다음 투자자의 돈으로 주는 "돌려막기"일 수 있습니다.',
+  tips:['"원금 보장 + 고수익" 상품은 없습니다. 일단 의심하세요.','제도권 금융회사인지 금융감독원 파인(FINE)에서 조회하세요.','유사수신이 의심되면 금융감독원 1332로 상담·신고하세요.']},
+ {id:'insure',emoji:'🩺',name:'실손의료보험 1개',sub:'꼭 필요한 보장만',value:100,risk:'safe',tags:['protect'],part:P1,
+  desc:'병원비 위기 카드를 완전히 막아줍니다. 가치는 낮지만 효과는 큽니다.',
+  why:'보험 자체는 돈이 불어나는 자산이 아닙니다. 하지만 큰 병원비가 나왔을 때 적금을 깨지 않게 막아 주기 때문에 내 재무 구조 전체를 지켜 줍니다.',
+  tips:['실손은 1개면 충분해요. 여러 개 들어도 실제 치료비 이상은 보상되지 않습니다.','복지제도 단체보험과 부모님이 가입해 준 보험부터 확인하세요.','보험료 총액은 실수령액의 5~8% 이내로 관리하세요.']},
+ {id:'pension',emoji:'🧓',name:'연금저축·IRP 계좌',sub:'노후 준비 + 세액공제',value:300,risk:'mid',tags:['retire','pension'],part:P3,
+  desc:'노후를 위한 계좌입니다. 연말정산 때 세금을 돌려받을 수 있어요.',
+  why:'연금 개혁으로 공무원연금만으로는 노후가 부족할 수 있어 개인연금 보완이 필요합니다. 연금저축·IRP는 넣은 돈에 대해 연말정산 세액공제를 받으니, 돌려받는 세금 자체가 "확정 수익"이에요.',
+  tips:['연금저축·IRP 합산 연 900만 원 한도, 13.2~16.5% 세액공제(강의자료 기준)','월 10만 원부터라도 계좌를 먼저 만들어 습관을 들이세요.','연금으로 받아야 혜택이 유지됩니다. 중도 인출하면 세금 불이익이 있어요.']},
+ {id:'car',emoji:'🚗',name:'신차 할부 구매',sub:'첫 차는 새 차로!',value:400,risk:'trap',tags:['car'],part:P1,monthly:{amt:30,label:'자동차 할부금'},
+  desc:'이벤트 카드마다 할부금 30만원이 나가고, 시간이 지날수록 가치가 떨어집니다.',
+  why:'공무원은 신용도가 좋아 할부·대출이 쉽게 나와서 과소비로 이어지기 쉽습니다. 자동차는 가치가 떨어지는 소비재이고, 할부 이자·보험·유지비가 계속 빠져나가요. 감정가가 높아도 "나가는 돈"을 만드는 품목입니다.',
+  tips:['차값만이 아니라 이자·보험·유지비를 합친 월 총비용을 계산하세요.','할부보다 목돈을 모아 사거나 중고차도 함께 비교하세요.','"신용이 좋으니 괜찮다"는 안정감이 가장 큰 함정입니다.']},
+ {id:'deposit',emoji:'💰',name:'적금 풍차돌리기',sub:'매달 1년 적금 가입 → 매달 만기',value:300,risk:'safe',tags:['saving'],part:P2,
+  desc:'매달 1년짜리 적금을 하나씩 들어, 1년 뒤부터 매달 만기가 돌아옵니다.',
+  why:'원금과 약정 이자가 보장되고, 매달 만기가 돌아와 급한 돈이 생겨도 전체를 깰 필요가 없습니다. 수익은 크지 않지만 저축 습관을 만드는 데 가장 좋은 방법이에요.',
+  tips:['월급날 "저축 먼저" 자동이체를 걸어 두세요.','정근수당·명절휴가비 같은 비정기 수입은 전액 저축 계좌로 보내세요.','만기된 목돈은 예금으로 굴리고, 남은 기간이 짧으면 파킹통장에 두세요.']},
+ {id:'insPack',emoji:'📑',name:'보험 풀패키지 가입',sub:'지인 설계사 추천 (저축성·종신 포함)',value:100,risk:'trap',tags:['protect','fee'],part:P1,monthly:{amt:20,label:'보험료'},
+  desc:'병원비도 막아주고 저축도 된다는데요? 이벤트 카드마다 보험료 20만원이 나갑니다.',
+  why:'보장은 되지만 보험료가 커서 매달 저축할 돈을 잡아먹습니다. 저축성·변액·종신보험은 "저축"이 아니며, 중도에 해지하면 돌려받는 돈(해지환급금)이 낸 돈보다 훨씬 적을 수 있어요. 감정가가 낮은 이유입니다.',
+  tips:['보험 다이어트 1단계: 이미 있는 보장(단체보험·부모님 가입 보험)부터 확인','2단계: 실손 1개 + 필요하면 저렴한 정기·3대 질병만','3단계: 저축과 보험은 분리하세요. 보험료는 실수령의 5~8% 이내로.']},
+ {id:'study',emoji:'📚',name:'자기계발 투자',sub:'자격증·어학·직무교육',value:150,risk:'mid',tags:['growth'],part:P0,
+  desc:'당장은 돈이 안 되지만 승진·성과 이벤트에서 보상이 돌아옵니다.',
+  why:'당장 현금으로 바꿀 수 없어 감정가는 낮습니다. 하지만 공무원은 호봉·승진으로 소득이 오르는 경로가 보이기 때문에, 역량을 키우면 평생 소득 자체가 커집니다.',
+  tips:['기관의 직무교육·상시학습·자격증 지원 제도를 먼저 활용하세요.','업무와 연결되는 역량부터 키우면 효과가 빠릅니다.','본인 교육비는 연말정산 공제 대상인지도 확인해 보세요.']},
+ {id:'check',emoji:'💳',name:'체크카드 중심 생활',sub:'신용카드는 1~2장만',value:50,risk:'safe',tags:['habit','check'],part:P3,
+  desc:'신용카드 대신 체크카드를 주로 씁니다. 연말정산 때 차이가 날까요?',
+  why:'체크카드는 쓴 만큼만 나가서 과소비를 막아 주고, 연말정산 소득공제율도 신용카드(15%)의 2배인 30%입니다. 작은 습관이 세금 환급과 지출 관리를 동시에 챙겨 줘요.',
+  tips:['카드는 1~2장만, 결제일은 월급일 직후로 맞추세요.','공과금·통신비는 자동이체로 연체 "0"을 유지하세요.','리볼빙은 "최소 결제"가 아니라 고금리 대출입니다.']}
+];
+
+const EVENTS=[
+ {id:'hospital',emoji:'🚑',title:'갑작스러운 입원',desc:'맹장 수술로 병원비 300만원이 필요합니다.',lesson:'보험과 비상금은 수익이 아니라 다른 자산을 지키는 방패입니다.',part:P1,
+  why:'실손보험이 있는 팀은 보험이 병원비를 막았고, 비상금이 있는 팀은 비상금에서 먼저 빠져나갔습니다. 둘 다 없는 팀은 현금이 부족해 다른 자산을 헐값(70%)에 팔아야 했어요.',
+  tips:['돈 관리의 첫 단계는 안전망입니다.','비상금(생활비 3~6개월) + 실손보험 1개 조합을 먼저 갖추세요.','위기 때 적금을 깨면 이자 손해가 확정됩니다.'],
+  run:t=>{ const ins=own(t,'insure')?'실손보험':alive(t,'insPack')?'보험 풀패키지':null; if(ins){t.crisisDefended++;return [`🩺 ${ins}으로 병원비 처리 완료 (지출 0원)`];} return [pay(t,300,'병원비',true)]; }},
+ {id:'scam_pay',emoji:'🎉',title:'첫 배당금 입금',desc:'"원금 보장 월 5%" 리딩방에서 약속한 배당금이 들어왔습니다.',lesson:'초기 배당은 더 큰 돈을 끌어들이기 위한 미끼일 수 있습니다.',part:P4,
+  why:'사기 조직은 처음 몇 달은 약속대로 돈을 줘서 신뢰를 쌓습니다. 이 돈은 수익이 아니라 다른 사람이 넣은 원금일 수 있어요. 배당을 받은 사람이 지인을 끌어오면서 피해가 커집니다.',
+  tips:['배당이 잘 들어온다고 추가로 돈을 넣지 마세요.','지인에게 권유하는 순간 나도 피해를 키우게 됩니다.','수익 구조를 설명하지 못하는 상품에는 돈을 넣지 마세요.'],
+  run:t=>{ if(alive(t,'scam')){t.cash+=30;return ['💵 배당금 30만원 입금 — "역시 확실하네!"'];} return []; }},
+ {id:'scam_bust',emoji:'🚨',title:'리딩방 사기 적발!',desc:'"원금 보장 월 5%" 업체 대표가 투자금을 들고 잠적했습니다.',lesson:'원금 보장 + 고수익은 없습니다. 사기의 대표 신호예요.',part:P4,
+  why:'새로 들어온 돈으로 기존 투자자에게 배당을 주는 "돌려막기" 구조였습니다. 신규 투자금이 끊기는 순간 무너지고, 남은 원금은 돌려받기 매우 어렵습니다.',
+  tips:['원금 보장 + 고수익 + 비밀스러운 권유 = 사기 3종 세트','제도권 금융회사인지 금융감독원 파인(FINE)에서 먼저 조회하세요.','의심되면 금융감독원 1332에 상담·신고하세요.'],
+  run:t=>{ const s=own(t,'scam'); if(s&&s.value>0){const v=s.value;s.value=0;return [`❌ 리딩방 투자 ${fmt(v)} 전액 손실`];} return []; }},
+ {id:'rate_up',emoji:'🏦',title:'기준금리 인상',desc:'한국은행이 기준금리를 올렸습니다.',lesson:'금리가 오르면 예·적금은 유리하고, 대출·할부는 불리해집니다.',part:P2,
+  why:'금리가 오르면 예·적금 이자는 늘어나지만 대출·할부 이자 부담도 함께 커집니다. 저축 상품을 가진 팀은 웃고, 할부가 있는 팀은 부담이 늘었어요.',
+  tips:['변동금리 대출·할부가 있다면 이자 부담을 다시 계산하세요.','금리가 오를 때는 예·적금 금리를 비교해 갈아탈 기회를 보세요.','빚을 줄이는 것도 확실한 재테크입니다.'],
+  run:t=>{ const n=[...mult(t,'saving',1.08)]; if(alive(t,'car')) n.push(pay(t,50,'할부 이자 상승',false)); return n; }},
+ {id:'inflation',emoji:'🛒',title:'물가 급등',desc:'장바구니 물가가 크게 올라 현금의 실질 가치가 떨어졌습니다.',lesson:'현금만 쥐고 있는 것도 위험입니다.',part:P2,
+  why:'물가가 오르면 같은 돈으로 살 수 있는 물건이 줄어듭니다. 그래서 현금을 많이 쥐고만 있던 팀일수록 실질 자산이 많이 줄었어요.',
+  tips:['돈에 "쓸 날짜"와 "목적"을 붙여 통장을 나눠 두세요.','현금은 비상금 수준만 두고 나머지는 목적별 저축으로 옮기세요.','고정지출(구독·통신비)을 점검하면 물가 상승을 덜 체감할 수 있어요.'],
+  run:t=>{ if(t.cash<=0) return []; const o=t.cash; t.cash=Math.round(o*0.92); return [`💸 현금 가치 하락 ${fmt(o)} → ${fmt(t.cash)}`]; }},
+ {id:'promotion',emoji:'🎖️',title:'승진·성과 평가',desc:'직무 역량을 키운 직원이 좋은 평가를 받았습니다.',lesson:'나에 대한 투자가 가장 오래가는 투자입니다.',part:P0,
+  why:'자기계발에 투자한 팀은 역량이 올라 성과급을 받았습니다. 공무원은 호봉·승진으로 소득이 오르는 경로가 보이기 때문에 역량이 곧 평생 소득으로 이어져요.',
+  tips:['기관의 교육·자격증 지원 제도를 먼저 활용하세요.','업무와 연결되는 역량에 우선 투자하세요.','성과상여금도 비정기 수입! 들어오면 바로 저축 계좌로.'],
+  run:t=>{ if(alive(t,'study')){t.cash+=200;return ['📚 자기계발 효과로 성과급 +200만원'];} return []; }},
+ {id:'cheong_win',emoji:'🔑',title:'청약 당첨',desc:'꾸준히 넣어 온 청약통장으로 당첨 기회를 잡았습니다.',lesson:'일찍 시작한 작은 습관이 큰 기회가 됩니다.',part:P5,
+  why:'청약통장을 갖고 있던 팀만 당첨 기회를 얻어 가치가 크게 올랐습니다. 청약은 늦게 시작하면 납입 기간과 횟수를 따라잡을 수 없어요.',
+  tips:['청약통장은 "지금" 만드는 것이 가장 좋습니다.','신혼부부·생애최초 특별공급, 공공분양 자격을 미리 확인하세요.','청약·대출 요건은 자주 바뀌니 청약홈에서 공고 시점에 확인하세요.'],
+  run:t=>mult(t,'cheong',1.6)},
+ {id:'wedding',emoji:'💌',title:'경조사 몰린 달',desc:'동기 결혼식과 집안 행사가 한꺼번에 몰렸습니다. 모든 팀 100만원 지출!',lesson:'예상 못 한 지출은 반드시 옵니다. 그래서 비상금이 필요합니다.',part:P1,
+  why:'모든 팀에 똑같이 지출이 생겼지만 결과는 달랐습니다. 비상금이나 현금이 있는 팀은 그냥 지나갔고, 없는 팀은 자산을 헐값에 팔아야 했어요.',
+  tips:['경조사비는 연간 예산으로 미리 잡아 두세요.','경조사 전용 통장을 만들어 매달 조금씩 모으세요.','신입 시기에는 경조사가 몰릴 수 있으니 여유분을 두세요.'],
+  run:t=>[pay(t,100,'경조사비',true)]},
+ {id:'depreciation',emoji:'🏷️',title:'중고 시세 확인',desc:'차와 명품의 중고 시세를 알아봤습니다.',lesson:'소비재는 사는 순간부터 가치가 떨어집니다.',part:P1,
+  why:'자동차와 명품은 시간이 지날수록, 사용할수록 가치가 떨어집니다. 할부로 샀다면 가치는 줄어드는데 갚을 돈은 그대로 남아요.',
+  tips:['살 때 "되팔 때 가격"을 함께 생각해 보세요.','소비는 나쁜 것이 아닙니다. 다만 예산 안에서 계획적으로 하세요.','할부로 산 소비재는 가치는 줄고 빚은 남습니다.'],
+  run:t=>[...mult(t,'car',0.7),...mult(t,'luxury',0.5)]},
+ {id:'car_repair',emoji:'🔧',title:'출근길 접촉 사고',desc:'차 수리비 150만원이 나왔습니다.',lesson:'자동차는 구입비보다 유지비까지 계산해야 합니다.',part:P1,
+  why:'차를 가진 팀만 수리비가 나갔습니다. 자동차는 사는 비용 외에도 사고·수리·보험료 같은 예상 밖 비용이 계속 생기는 품목이에요.',
+  tips:['자동차보험의 자기차량손해 보장 여부를 확인하세요.','차량 유지비 통장을 따로 만들어 두세요.','차를 살 때 월 총유지비를 먼저 계산하세요.'],
+  run:t=> alive(t,'car') ? [pay(t,150,'차량 수리비',true)] : []},
+ {id:'card_bill',emoji:'🧨',title:'카드값 폭탄',desc:'할부·구독·보험료가 한꺼번에 몰려 이번 달 카드 명세서가 충격적입니다.',lesson:'할부와 구독은 다음 달 월급을 미리 쓰는 구조입니다.',part:P1,
+  why:'할부·구독·보험료처럼 매달 자동으로 나가는 돈이 많은 팀일수록 카드값 부담이 커졌습니다. 고정지출이 쌓이면 저축할 돈이 남지 않아요.',
+  tips:['카드는 1~2장만, 결제일은 월급일 직후로 맞추세요.','리볼빙·현금서비스·카드론은 고금리 대출입니다. 절대 피하세요.','신용점수를 무료로 조회해 정기적으로 점검하세요.'],
+  run:t=>{ const n=t.items.filter(x=>IT(x.id).monthly&&x.value>0).length; return n?[pay(t,25*n,`카드값 폭탄(고정지출 ${n}건)`,true)]:['✅ 매달 빠져나가는 돈이 없어 카드값 걱정 없음']; }},
+ {id:'bonus',emoji:'🎊',title:'명절휴가비 입금',desc:'명절휴가비 100만원이 들어왔습니다. 어디로 보낼까요?',lesson:'비정기 수입은 전액 저축 계좌로!',part:P1,
+  why:'저축 계좌가 있는 팀은 보너스가 바로 저축으로 들어가 그대로 남았습니다. 없는 팀은 현금으로 들어와 "기분 좋게" 절반을 써 버렸어요. 같은 돈이라도 "보낼 곳"이 정해져 있느냐가 차이를 만듭니다.',
+  tips:['정근수당(1·7월)·명절휴가비·성과상여금은 전액 저축 계좌로 보내세요.','월급 계획은 언제나 "실수령액" 기준으로 세우세요.','들어오기 전에 보낼 곳을 미리 정해 두세요.'],
+  run:t=>{ const sv=t.items.find(x=>['deposit','youth','gonje'].includes(x.id)&&x.value>0); if(sv){sv.value+=100;return [`💰 보너스 100만원 → ${IT(sv.id).name}에 바로 저축`];} t.cash+=50; return ['💸 보너스 100만원 입금… 기분 내다 50만원 써버림 (현금 +50)']; }},
+ {id:'youth_gov',emoji:'🎁',title:'정부 기여금 지급',desc:'청년미래적금에 정부 기여금이 더해졌습니다.',lesson:'나라가 얹어주는 돈, 몰라서 못 받으면 손해입니다.',part:P5,
+  why:'청년미래적금을 가진 팀만 정부 기여금과 비과세 혜택을 받았습니다. 같은 금액을 저축해도 어떤 상품에 넣느냐에 따라 결과가 달라져요.',
+  tips:['온통청년·복지로·구청 누리집에서 청년 지원 제도를 확인하세요.','모집 기간이 정해진 상품은 알림을 신청해 두세요.','무주택 청년이라면 청년 월세 지원도 확인해 보세요.'],
+  run:t=>mult(t,'youth',1.12)},
+ {id:'tax',emoji:'🧾',title:'연말정산 환급',desc:'13월의 월급, 연말정산 결과가 나왔습니다.',lesson:'돌려받는 세금도 확정 수익입니다.',part:P3,
+  why:'연금저축·IRP에 넣은 팀은 세액공제를, 체크카드를 주로 쓴 팀은 더 높은 소득공제를 받아 세금을 돌려받았습니다. 시장 상황과 관계없이 받는 "확정 수익"이에요.',
+  tips:['연금저축·IRP는 결정세액을 확인한 뒤 납입 금액을 정하세요.','카드 소득공제는 총급여의 25%를 넘게 쓴 부분부터 적용돼요.','홈택스 "연말정산 미리보기"로 미리 점검하세요.'],
+  run:t=>{ const n=[]; if(alive(t,'pension')){t.cash+=80;n.push('🧾 연금저축·IRP 세액공제 환급 +80만원');} if(alive(t,'check')){t.cash+=40;n.push('💳 체크카드 소득공제 환급 +40만원');} return n; }},
+ {id:'compound',emoji:'⏳',title:'복리의 마법',desc:'시간이 흘러 꾸준한 저축에 이자가 쌓였습니다.',lesson:'시간을 내 편으로 만드세요.',part:P4,
+  why:'이자에 다시 이자가 붙는 복리 덕분에 저축 상품을 가진 팀의 자산이 늘었습니다. 복리는 금액보다 "기간"이 길수록 위력이 커져요.',
+  tips:['72의 법칙: 72 ÷ 연이율(%) ≈ 원금이 2배가 되는 기간(년)','일찍 시작할수록 같은 금액으로 더 큰 결과를 얻습니다.','중간에 깨지 않는 것이 복리의 핵심입니다.'],
+  run:t=>[...mult(t,'saving',1.05),...mult(t,'gonje',1.05)]}
+];
+
+/* ===================== 상태 ===================== */
+const fresh=()=>({step:'setup',setup:{count:5,cash:1000,rounds:6,names:[...DEFAULT_NAMES]},teams:[],idx:0,sales:{},reveal:null,auc:null,host:'',deck:[],drawn:0,last:null,sound:true});
+let S=load()||fresh();
+const hist=[];
+let justDrew=false, cdStep=0, cdTimer=null, flashPrice=false, audio=null;
+
+function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function snap(){hist.push(JSON.stringify(S));if(hist.length>80)hist.shift()}
+
+/* ===================== 유틸 ===================== */
+const $=s=>document.querySelector(s);
+const fmt=n=>`${Math.round(n).toLocaleString('ko-KR')}만원`;
+const IT=id=>ITEMS.find(x=>x.id===id);
+const EV=id=>EVENTS.find(x=>x.id===id);
+const own=(t,id)=>t.items.find(x=>x.id===id);
+const alive=(t,id)=>{const x=own(t,id);return !!(x&&x.value>0)};
+const assets=t=>t.cash+t.items.reduce((s,x)=>s+x.value,0);
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const startPrice=it=>it.value>=300?100:it.value>=150?50:20;
+
+function mult(t,tag,k){
+  const n=[];
+  t.items.forEach(x=>{const it=IT(x.id);if(it.tags.includes(tag)&&x.value>0){const o=x.value;x.value=Math.round(o*k);n.push(`${it.emoji} ${it.name} ${fmt(o)} → ${fmt(x.value)}`)}});
+  return n;
+}
+function pay(t,amt,reason,crisis){
+  let rem=amt;const parts=[];let forced=false;
+  if(crisis){const em=t.items.find(x=>x.id==='emer'&&x.value>0);if(em){const u=Math.min(em.value,rem);em.value-=u;rem-=u;parts.push(`비상금 ${fmt(u)}`)}}
+  if(rem>0&&t.cash>0){const u=Math.min(t.cash,rem);t.cash-=u;rem-=u;parts.push(`현금 ${fmt(u)}`)}
+  while(rem>0){
+    const c=t.items.filter(x=>x.value>0).sort((a,b)=>b.value-a.value)[0];
+    if(!c){t.cash-=rem;parts.push(`빚 ${fmt(rem)}`);rem=0;forced=true;break}
+    const sale=Math.round(c.value*0.7);c.value=0;c.forced=true;forced=true;
+    parts.push(`${IT(c.id).emoji}${IT(c.id).name} 헐값 매도(70%·${fmt(sale)})`);
+    if(sale>=rem){t.cash+=sale-rem;rem=0}else rem-=sale;
+  }
+  if(crisis){forced?t.crisisFail++:t.crisisDefended++}else if(forced)t.crisisFail++;
+  return `${forced?'⚠️':'💳'} ${reason} ${fmt(amt)} → ${parts.join(' + ')}`;
+}
+function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2200)}
+function openModal(body,foot){$('#modalBody').innerHTML=body;$('#modalFoot').innerHTML=foot||'<button class="btn primary" data-action="closeModal">확인</button>';$('#modal').hidden=false}
+function closeModal(){$('#modal').hidden=true}
+
+/* 효과음 (클릭 이후에만 재생) */
+function initAudio(){try{if(!audio){const C=window.AudioContext||window.webkitAudioContext;if(C)audio=new C()}if(audio&&audio.state==='suspended')audio.resume()}catch(e){audio=null}}
+function tone(freq,dur,type,vol,delay){
+  if(!S.sound||!audio)return;
+  try{const t0=audio.currentTime+(delay||0);const o=audio.createOscillator();const g=audio.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(freq,t0);o.frequency.exponentialRampToValueAtTime(Math.max(40,freq*0.5),t0+dur);
+    g.gain.setValueAtTime(vol||0.25,t0);g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+    o.connect(g);g.connect(audio.destination);o.start(t0);o.stop(t0+dur+0.02)}catch(e){}
+}
+const sfx={
+  bid:()=>tone(880,.12,'triangle',.18),
+  tick:()=>tone(520,.15,'square',.12),
+  hammer:()=>{tone(140,.25,'square',.35);tone(90,.35,'sine',.4,.04);tone(1046,.5,'triangle',.15,.15)},
+  flip:()=>{tone(400,.12,'triangle',.15);tone(700,.18,'triangle',.15,.08)}
+};
+
+/* ===================== 경매 진행 ===================== */
+function openLot(){
+  const it=ITEMS[S.idx];
+  S.auc={price:startPrice(it),leader:null,bids:[]};
+  S.host=pick([
+    `자, <b>${S.idx+1}번째 품목</b>입니다! ${it.emoji} <b>${it.name}</b>! 시작가 <b>${fmt(startPrice(it))}</b>부터 갑니다. 손 드실 팀 계십니까?`,
+    `다음 품목 나갑니다! ${it.emoji} <b>${it.name}</b>, "${it.sub}"! 시작가는 <b>${fmt(startPrice(it))}</b>입니다!`,
+    `이번엔 ${it.emoji} <b>${it.name}</b>입니다. 실제 가치는 낙찰 후에 공개됩니다. 시작가 <b>${fmt(startPrice(it))}</b>!`
+  ]);
+}
+function stopCountdown(){if(cdTimer){clearTimeout(cdTimer);cdTimer=null}cdStep=0}
+function raise(ti,inc){
+  initAudio();
+  const a=S.auc;const t=S.teams[ti];
+  const np=a.leader===null?a.price:a.price+inc;
+  if(t.cash<np) return toast(`${t.name}의 현금(${fmt(t.cash)})으로는 ${fmt(np)}에 응찰할 수 없어요`);
+  if(a.leader===ti) return toast('이미 최고가 응찰 팀이에요');
+  snap();stopCountdown();
+  a.price=np;a.leader=ti;a.bids.push({team:ti,price:np});
+  const n=a.bids.length;
+  S.host=n===1?pick([`<b>${esc(t.name)}</b>, 시작가 <b>${fmt(np)}</b> 응찰! 첫 손님 감사합니다. 더 없습니까?`,`좋습니다! <b>${esc(t.name)}</b>에서 <b>${fmt(np)}</b>! 다른 팀은요?`])
+    :pick([`<b>${esc(t.name)}</b> <b>${fmt(np)}</b>! 더 없습니까?`,`오~ <b>${esc(t.name)}</b>에서 <b>${fmt(np)}</b> 나왔습니다!`,`<b>${fmt(np)}</b>! <b>${esc(t.name)}</b>가 치고 나갑니다! 더 부르실 분?`,`경쟁이 뜨겁네요! <b>${esc(t.name)}</b> <b>${fmt(np)}</b>!`,`<b>${fmt(np)}</b>까지 올라왔습니다! 정말 그만한 가치가 있을까요? 🤔`]);
+  flashPrice=true;sfx.bid();save();render();
+}
+function undoBid(){
+  const a=S.auc;if(!a||!a.bids.length) return toast('취소할 응찰이 없어요');
+  snap();stopCountdown();a.bids.pop();
+  const last=a.bids[a.bids.length-1];
+  if(last){a.price=last.price;a.leader=last.team}else{a.price=startPrice(ITEMS[S.idx]);a.leader=null}
+  S.host=last?`응찰 하나 취소합니다. 현재 최고가는 <b>${esc(S.teams[last.team].name)}</b> <b>${fmt(last.price)}</b>!`:'응찰이 모두 취소되었습니다. 다시 시작가부터 갑니다!';
+  save();render();
+}
+function countdown(){
+  initAudio();
+  const a=S.auc;if(!a||a.leader===null) return toast('응찰한 팀이 없어요. 유찰하거나 응찰을 받아 주세요');
+  if(cdTimer) return;
+  const lines=[`<b>${fmt(a.price)}</b>! 하나… 갑니다!`,`<b>${fmt(a.price)}</b>! 둘…!`,`마지막 기회! <b>${fmt(a.price)}</b>! 더 없습니까?!`];
+  const tick=()=>{
+    if(cdStep<3){S.host=lines[cdStep];cdStep++;sfx.tick();render();cdTimer=setTimeout(tick,1300)}
+    else{cdTimer=null;cdStep=0;hammer()}
+  };
+  cdStep=0;tick();
+}
+function hammer(){
+  initAudio();stopCountdown();
+  const a=S.auc;if(!a||a.leader===null) return toast('응찰한 팀이 없어요');
+  const it=ITEMS[S.idx];const t=S.teams[a.leader];const price=a.price;
+  if(t.cash<price) return toast(`${t.name}의 현금이 부족해요`);
+  snap();
+  t.cash-=price;t.items.push({id:it.id,paid:price,value:it.value});
+  S.sales[it.id]={team:a.leader,price,bids:a.bids.length};S.reveal=it.id;
+  const diff=price-it.value;
+  S.host=`🔨 <b>${esc(t.name)}</b>, <b>${fmt(price)}</b>에 낙찰! 자, 실제 가치는… <b>${fmt(it.value)}</b>입니다! `+
+    (it.id==='scam'?'과연 이 가치가 끝까지 유지될까요? 😏':it.monthly?`앞으로 이벤트 카드마다 ${it.monthly.label} <b>${fmt(it.monthly.amt)}</b>씩 빠져나간다는 것, 잊지 마세요!`:
+     diff>0?pick([`${fmt(diff)} 비싸게 사셨네요. 경쟁 분위기에 휩쓸리셨나요? 😅`,`${fmt(diff)} 웃돈을 주셨습니다. "이기고 싶은 마음"도 소비 심리입니다!`])
+     :diff<0?pick([`${fmt(-diff)}나 싸게 사셨어요! 현명한 입찰입니다 👏`,`가치보다 ${fmt(-diff)} 저렴하게! 훌륭합니다!`]):'딱 정가에 사셨네요. 정확한 눈썰미입니다!');
+  save();render();showHammer(`${t.name} · ${fmt(price)}`);
+}
+function showHammer(sub){
+  sfx.hammer();
+  $('#hammerSub').textContent=sub;const h=$('#hammer');h.classList.remove('show');void h.offsetWidth;h.classList.add('show');
+  const av=document.querySelector('.avatar');const hc=document.querySelector('#hammerChar svg');if(hc){hc.classList.remove('hit');void hc.getBoundingClientRect();hc.classList.add('hit')}if(av){av.classList.remove('strike');void av.offsetWidth;av.classList.add('strike')}
+  clearTimeout(showHammer._t);showHammer._t=setTimeout(()=>h.classList.remove('show'),1400);
+}
+function passItem(){
+  const it=ITEMS[S.idx];if(S.sales[it.id]&&!S.sales[it.id].passed) return;
+  snap();stopCountdown();S.sales[it.id]={passed:true};
+  nextItem(`아무도 없나요? ${it.emoji} <b>${it.name}</b>은(는) <b>유찰</b>입니다! 때로는 "안 사는 것"도 좋은 선택이죠.`);
+}
+function nextItem(prefix){
+  stopCountdown();S.reveal=null;
+  for(let k=1;k<=ITEMS.length;k++){const j=(S.idx+k)%ITEMS.length;if(!S.sales[ITEMS[j].id]){S.idx=j;openLot();if(prefix)S.host=prefix+' '+S.host;save();render();return}}
+  S.idx=ITEMS.length;S.auc=null;
+  S.host=(prefix?prefix+' ':'')+'모든 품목의 경매가 끝났습니다! 🎉 이제 <b>인생 이벤트 카드</b>로 여러분의 선택이 어떤 결과를 낳는지 확인해 봅시다!';
+  save();render();
+}
+
+/* ===================== 이벤트·점수 ===================== */
+function buildDeck(){
+  const n=S.setup.rounds;
+  const others=shuffle(EVENTS.map(e=>e.id).filter(id=>!['hospital','scam_pay','scam_bust'].includes(id)));
+  S.deck=[...shuffle(['hospital','scam_pay',...others.slice(0,Math.max(0,n-3))]),'scam_bust'];
+  S.drawn=0;S.last=null;
+}
+function startGame(){
+  snap();stopCountdown();
+  const st=S.setup;const snd=S.sound;
+  S={...fresh(),setup:st,sound:snd,step:'auction'};
+  S.teams=Array.from({length:st.count},(_,i)=>({name:(st.names[i]||DEFAULT_NAMES[i]||`${i+1}팀`).trim()||`${i+1}팀`,color:COLORS[i],cash:st.cash,items:[],crisisFail:0,crisisDefended:0,fees:0}));
+  buildDeck();S.idx=0;openLot();
+  const f=ITEMS[0];
+  S.host=`안녕하세요, 오늘 경매를 진행할 <b>${HOST}</b>입니다! 🎩 각 팀에 <b>${fmt(st.cash)}</b>씩 드렸습니다. 첫 월급, 어디에 쓰시겠습니까? 첫 번째 품목은 ${f.emoji} <b>${f.name}</b>! 시작가 <b>${fmt(startPrice(f))}</b>부터 갑니다!`;
+  save();render();window.scrollTo({top:0,behavior:'smooth'});
+}
+function draw(){
+  if(S.drawn>=S.deck.length) return;
+  initAudio();snap();
+  const ev=EV(S.deck[S.drawn]);
+  const res=S.teams.map((t,i)=>{
+    const before=assets(t);const notes=ev.run(t)||[];
+    t.items.forEach(x=>{const m=IT(x.id).monthly;if(m&&x.value>0){notes.push(pay(t,m.amt,m.label,false));t.fees=(t.fees||0)+m.amt}});
+    return {team:i,notes,delta:assets(t)-before};
+  });
+  S.last={id:ev.id,res};S.drawn++;justDrew=true;
+  const best=[...res].sort((a,b)=>b.delta-a.delta)[0],worst=[...res].sort((a,b)=>a.delta-b.delta)[0];
+  S.host=`${ev.emoji} <b>${ev.title}</b>${ev.title.endsWith('!')?'':'!'} `+(worst.delta<0?`가장 타격이 큰 팀은 <b>${esc(S.teams[worst.team].name)}</b>(${fmt(worst.delta)})이네요. `:'')+(best.delta>0?`<b>${esc(S.teams[best.team].name)}</b>은(는) 웃었습니다! `:'')+'아래 학습 노트에서 이유를 함께 볼까요?';
+  sfx.flip();save();render();
+}
+function scores(){
+  const max=Math.max(1,...S.teams.map(assets));
+  return S.teams.map((t,i)=>{
+    const a=assets(t);
+    const assetScore=Math.max(0,Math.round(50*a/max));
+    const tags=new Set();t.items.forEach(x=>IT(x.id).tags.forEach(g=>tags.add(g)));
+    let stab=0;[['saving'],['protect'],['retire'],['growth','habit']].forEach(g=>{if(g.some(x=>tags.has(x)))stab+=6});
+    const safeVal=Math.max(0,t.cash)+t.items.filter(x=>IT(x.id).risk==='safe').reduce((s,x)=>s+x.value,0);
+    if(a>0&&safeVal/a>=0.3) stab+=6;
+    const riskyPaid=t.items.filter(x=>['risk','trap'].includes(IT(x.id).risk)).reduce((s,x)=>s+x.paid,0);
+    if(riskyPaid/S.setup.cash>0.4) stab-=6;
+    stab=Math.max(0,Math.min(30,stab));
+    const crisis=Math.max(0,Math.min(20,14+3*t.crisisDefended-7*t.crisisFail));
+    const ins=[];
+    const over=t.items.reduce((s,x)=>s+Math.max(0,x.paid-IT(x.id).value),0);
+    if(over>0) ins.push(`🔥 감정가보다 ${fmt(over)} 더 지불 (경매 과열)`);
+    if(own(t,'scam')) ins.push('🎁 "원금 보장" 리딩방에 걸려 손실');
+    if((t.fees||0)>0) ins.push(`💸 할부·구독·보험료로 ${fmt(t.fees)} 지출`);
+    if(t.crisisFail>0) ins.push(`⚠️ 위기 때 자산 헐값 매도 ${t.crisisFail}회`);
+    if(t.crisisDefended>=2&&t.crisisFail===0) ins.push('🛡️ 모든 위기를 안전하게 방어');
+    if(a>0&&t.cash/a>0.6) ins.push('💤 현금 비중 과다 — 물가 상승에 취약');
+    if(riskyPaid/S.setup.cash>0.4) ins.push('🎢 소비·함정 품목 비중 40% 초과');
+    if(!t.items.length) ins.push('🤷 아무것도 사지 않음');
+    if(!ins.length) ins.push('👍 균형 잡힌 포트폴리오');
+    return {i,t,a,assetScore,stab,crisis,total:assetScore+stab+crisis,ins};
+  }).sort((x,y)=>y.total-x.total||y.a-x.a);
+}
+
+/* ===================== 화면 ===================== */
+const STEPS=[['setup','① 팀 설정'],['auction','② 경매'],['event','③ 인생 이벤트'],['result','④ 결과·정리']];
+function render(){
+  $('#steps').innerHTML=STEPS.map(([k,l])=>`<button class="step ${S.step===k?'on':''}" data-action="go" data-v="${k}">${l}</button>`).join('');
+  $('#soundBtn').textContent=S.sound?'🔊':'🔇';
+  const v={setup:vSetup,auction:vAuction,event:vEvent,result:vResult}[S.step]||vSetup;
+  $('#app').innerHTML=v();
+  if(S.step==='event'&&justDrew){
+    const c=document.querySelector('.card3d');
+    if(c){c.classList.remove('flipped');requestAnimationFrame(()=>requestAnimationFrame(()=>c.classList.add('flipped')))}
+    justDrew=false;
+  }
+  if(flashPrice){const p=document.querySelector('.pricebox');if(p)p.classList.add('flash');flashPrice=false}
+}
+
+function hostBar(msg){
+  return `<section class="host glass"><div class="avatar talk">${donSvg('85 45 300 300')}</div>
+    <div style="flex:1;min-width:0"><div class="hostname">🎩 ${HOST}</div><div class="bubble">${msg}</div></div></section>`;
+}
+function learnBox(title,badge,why,tips){
+  return `<div class="learn"><div class="lh">📘 <b>${title}</b><span>${badge}</span></div>
+    <div class="lsec"><b>❓ 왜 그럴까?</b><p>${why}</p></div>
+    <div class="lsec"><b>✅ 관리 TIP</b><ul>${tips.map(t=>`<li>${t}</li>`).join('')}</ul></div></div>`;
+}
+
+function vSetup(){
+  const st=S.setup;
+  return `
+  <section class="hero glass">
+    <div class="hero-txt">
+      <span class="pill">신입공직자 금융테크 게임</span>
+      <h1>첫 월급으로<br>무엇을 사시겠습니까?</h1>
+      <p>경매사 <b>돈쌤</b>의 진행에 따라 팀별로 금융상품과 소비 아이템을 경매로 삽니다. 낙찰될 때마다 실제 가치와 "왜 그런지", 관리 TIP이 공개되고, 인생 이벤트 카드로 선택의 결과를 확인합니다. 최종 승자는 돈이 가장 많은 팀이 아니라 <b>가장 단단한 재무 구조</b>를 만든 팀입니다.</p>
+    </div>
+    <div class="hero-char">${donSvg('60 40 340 455')}</div>
+  </section>
+  <section class="grid2">
+    <div class="glass pad">
+      <h2>⚙️ 게임 설정</h2>
+      <div class="field"><span>팀 수</span><div class="stepper"><button data-action="count" data-v="-1">−</button><b>${st.count}팀</b><button data-action="count" data-v="1">+</button></div></div>
+      <div class="field"><span>팀별 시작 자금</span>
+        <select data-field="cash">${[500,1000,1500,2000].map(v=>`<option value="${v}" ${st.cash===v?'selected':''}>${fmt(v)}</option>`).join('')}</select></div>
+      <div class="field"><span>이벤트 카드 수</span><div class="stepper"><button data-action="rounds" data-v="-1">−</button><b>${st.rounds}장</b><button data-action="rounds" data-v="1">+</button></div></div>
+      <p class="muted" style="font-size:13px;margin-top:10px">💡 '갑작스러운 입원', '첫 배당금', '리딩방 사기 적발' 카드는 항상 포함되며, 사기 적발은 마지막에 공개됩니다.</p>
+    </div>
+    <div class="glass pad">
+      <h2>👥 팀 이름</h2>
+      <div class="names">${Array.from({length:st.count},(_,i)=>`<label><span class="dot" style="background:${COLORS[i]};color:${COLORS[i]}"></span><input class="inp" data-field="name" data-i="${i}" value="${esc(st.names[i]??DEFAULT_NAMES[i]??'')}" maxlength="10"></label>`).join('')}</div>
+    </div>
+  </section>
+  <div class="cta">
+    ${S.teams.length?'<button class="btn ghost lg" data-action="go" data-v="auction">▶ 진행 중인 게임 이어하기</button>':''}
+    <button class="btn primary lg" data-action="start">🎬 ${S.teams.length?'새 게임 시작':'게임 시작'}</button>
+  </div>`;
+}
+
+function board(){
+  return `<div class="boardtitle"><h3>📊 팀 현황</h3><span class="muted" style="font-size:13px">현금 / 총자산</span></div>
+  <div class="board">${S.teams.map(t=>`
+    <div class="tcard glass">
+      <div class="nm"><span class="dot" style="background:${t.color};color:${t.color}"></span><b>${esc(t.name)}</b></div>
+      <div class="money"><span>현금 <b>${fmt(t.cash)}</b></span><span>총 <b>${fmt(assets(t))}</b></span></div>
+      <div class="its">${t.items.map(x=>`<span class="${x.value>0?'':'dead'}" title="${IT(x.id).name}">${IT(x.id).emoji}</span>`).join('')||'<span class="muted" style="font-size:13px;letter-spacing:0">보유 자산 없음</span>'}</div>
+    </div>`).join('')}</div>`;
+}
+
+function lotChips(){
+  return `<div class="lots">${ITEMS.map((it,i)=>{const s=S.sales[it.id];const cls=i===S.idx?'cur':s?(s.passed?'passed':'sold'):'';
+    return `<button class="lotchip ${cls}" data-action="jump" data-v="${i}" title="${it.name}">${it.emoji} ${s&&!s.passed?'✔':s&&s.passed?'유찰':''}</button>`}).join('')}</div>`;
+}
+
+function vAuction(){
+  if(!S.teams.length) return vSetup();
+  const done=ITEMS.filter(it=>S.sales[it.id]&&!S.sales[it.id].passed).length;
+  if(S.idx>=ITEMS.length){
+    return `${hostBar(S.host)}<section class="glass pad" style="text-align:center">
+      <div style="font-size:64px">🔨</div><h1>경매 종료!</h1>
+      <p class="muted" style="margin:10px 0 18px">${done}개 품목이 낙찰되었습니다. 이제 인생 이벤트 카드로 선택의 결과를 확인해 볼까요?</p>
+      <div class="cta"><button class="btn ghost" data-action="jump" data-v="0">품목 다시 보기</button><button class="btn primary lg" data-action="go" data-v="event">🃏 이벤트 단계로</button></div>
+      ${lotChips()}</section>${board()}`;
+  }
+  const it=ITEMS[S.idx];const sale=S.sales[it.id];const sold=sale&&!sale.passed;
+  if(!sold&&!S.auc) openLot();
+  let right;
+  if(sold){
+    const t=S.teams[sale.team];const diff=sale.price-it.value;
+    right=`<div class="reveal">
+      <h3>🔨 낙찰 결과</h3>
+      <div class="row"><span>낙찰 팀</span><b><span class="dot" style="background:${t.color};color:${t.color}"></span> ${esc(t.name)}</b></div>
+      <div class="row"><span>낙찰가</span><b>${fmt(sale.price)}</b></div>
+      <div class="row"><span>실제 가치(감정가)</span><b>${fmt(it.value)}</b></div>
+      <div class="verdict ${diff>0?'hot':'cool'}">${diff>0?`🔥 ${fmt(diff)} 비싸게 샀어요!`:diff<0?`👍 ${fmt(-diff)} 싸게 샀어요!`:'⚖️ 딱 정가에 샀어요.'}</div>
+    </div>
+    ${learnBox(it.name,it.part,it.why,it.tips)}
+    <div class="actions" style="grid-template-columns:2fr 1fr"><button class="btn primary lg" data-action="next">다음 품목 ▶</button><button class="btn ghost" data-action="undo">↩ 낙찰 취소</button></div>`;
+  }else{
+    const a=S.auc;const lead=a.leader!==null?S.teams[a.leader]:null;
+    right=`<div class="pricebox">
+        <div><small>${lead?'현재 최고가':'시작가'}</small><div class="p">${fmt(a.price)}</div></div>
+        <div class="who">${lead?`<small>최고 응찰</small><b><span class="dot" style="background:${lead.color};color:${lead.color}"></span> ${esc(lead.name)}</b>`:'<small>응찰 대기 중</small>✋'}</div>
+      </div>
+      <div class="cd">${[0,1,2].map(i=>`<i class="${i<cdStep?'on':''}"></i>`).join('')}</div>
+      <div class="bidrows">${S.teams.map((t,i)=>{
+        const isLead=a.leader===i;
+        const btns=a.leader===null
+          ?`<button class="btn good" data-action="raise" data-t="${i}" data-v="0" ${t.cash<a.price?'disabled':''}>✋ ${fmt(a.price)} 응찰</button>`
+          :isLead?`<span class="crown">👑 최고가</span>`
+          :[10,50,100].map(inc=>`<button class="btn ghost" data-action="raise" data-t="${i}" data-v="${inc}" ${t.cash<a.price+inc?'disabled':''}>+${inc}</button>`).join('');
+        return `<div class="brow ${isLead?'lead':''}"><div class="tn"><b><span class="dot" style="background:${t.color};color:${t.color}"></span>${esc(t.name)}</b><small>현금 ${fmt(t.cash)}</small></div><div class="bb">${btns}</div></div>`}).join('')}</div>
+      ${a.bids.length?`<div class="log">📝 ${a.bids.map(b=>`${esc(S.teams[b.team].name)} ${b.price}`).join(' → ')}</div>`:''}
+      <div class="actions">
+        <button class="btn warn lg" data-action="countdown" ${a.leader===null||cdTimer?'disabled':''}>⏱ 하나·둘·셋 카운트다운</button>
+        <button class="btn good" data-action="hammer" ${a.leader===null?'disabled':''}>🔨 즉시 낙찰</button>
+        ${a.bids.length?'<button class="btn ghost" data-action="undoBid">↩ 응찰 취소</button>':'<button class="btn danger" data-action="pass">유찰</button>'}
+      </div>`;
+  }
+  return `${hostBar(S.host)}
+  <section class="auction">
+    <div class="itemcard glass">
+      <span class="lot">품목 ${S.idx+1} / ${ITEMS.length} · 낙찰 ${done}</span>
+      <div class="big">${it.emoji}</div>
+      <h2>${it.name}</h2>
+      <div class="sub">${it.sub}</div>
+      <div style="margin-top:12px"><span class="tag ${it.risk}">${RISK[it.risk]}</span></div>
+      <div class="desc">${it.desc}</div>
+      <div class="secret">💎 실제 가치: ${sold?`<b>${fmt(it.value)}</b>`:'<b>??? 만원</b><span class="muted" style="font-size:13px">(낙찰 후 공개)</span>'}</div>
+      ${lotChips()}
+    </div>
+    <div class="ctrl glass">${right}</div>
+  </section>${board()}`;
+}
+
+function vEvent(){
+  if(!S.teams.length) return vSetup();
+  if(!S.deck.length) buildDeck();
+  const total=S.deck.length;const ev=S.last?EV(S.last.id):null;const finished=S.drawn>=total;
+  const prog=`<div class="progress">${S.deck.map((_,i)=>`<i class="${i<S.drawn?'on':''}"></i>`).join('')}</div>`;
+  const card=`<div class="flip"><div class="card3d ${ev?'flipped':''}">
+      <div class="face back"><div class="q">🃏</div><small>LIFE EVENT</small><p style="margin-top:10px;opacity:.85">${S.drawn<total?`${S.drawn+1}번째 카드`:''}</p></div>
+      <div class="face front">${ev?`<div class="em">${ev.emoji}</div><h2>${ev.title}</h2><p>${ev.desc}</p><div class="lesson">💡 ${ev.lesson}</div>`:''}</div>
+    </div></div>`;
+  const btn=finished?`<button class="btn primary lg" data-action="go" data-v="result">🏆 최종 결과 보기</button>`
+    :`<button class="btn primary lg" data-action="draw">🃏 ${S.drawn===0?'첫 카드 뽑기':'다음 카드 뽑기'}</button>`;
+  let results=`<div class="empty"><div style="font-size:46px">🎲</div><p>카드를 뽑으면 팀별 자산 변화와 학습 노트가 여기에 표시됩니다.</p><p style="font-size:13px;margin-top:6px">할부·구독·보험료가 있는 팀은 카드마다 해당 금액이 자동으로 빠져나가요.</p></div>`;
+  if(S.last){
+    results=learnBox(ev.title,ev.part,ev.why,ev.tips)+S.last.res.map((r,k)=>{const t=S.teams[r.team];return `<div class="rrow" style="animation-delay:${k*.07}s">
+      <div class="hd"><b><span class="dot" style="background:${t.color};color:${t.color}"></span> ${esc(t.name)}</b>
+      <span class="delta ${r.delta>0?'cool':r.delta<0?'hot':'muted'}">${r.delta>0?'▲ +':r.delta<0?'▼ ':''}${r.delta===0?'변동 없음':fmt(r.delta)}</span></div>
+      ${r.notes.length?`<ul>${r.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:''}</div>`}).join('');
+  }
+  const msg=S.last?S.host:`경매는 끝났지만 인생은 이제부터입니다! 😎 앞으로 <b>${total}장</b>의 인생 이벤트 카드가 기다리고 있어요. 첫 카드를 뽑아 볼까요?`;
+  return `${hostBar(msg)}<section class="eventgrid">
+    <div class="stage glass">${prog}<p class="muted">이벤트 카드 ${Math.min(S.drawn,total)} / ${total}</p>${card}${btn}</div>
+    <div class="results glass"><h2>📋 ${ev?`'${ev.title}' 결과`:'라운드 결과'}</h2>${results}</div>
+  </section>${board()}`;
+}
+
+function vResult(){
+  if(!S.teams.length) return vSetup();
+  const rs=scores();const medals=['🥇','🥈','🥉'];const top=rs[0];
+  const pending=S.drawn<S.deck.length?`<div class="glass pad" style="margin-bottom:14px">⏳ 아직 이벤트 카드가 ${S.deck.length-S.drawn}장 남았어요. 지금 점수는 중간 결과입니다. <button class="btn ghost sm" data-action="go" data-v="event">이벤트로 돌아가기</button></div>`:'';
+  const msg=`최종 1위는… <b>${esc(top.t.name)}</b>! 🎉 총 <b>${top.total}점</b>입니다. 기억하세요. 이 게임의 승자는 돈이 가장 많은 팀이 아니라 <b>흔들려도 무너지지 않는 팀</b>입니다. 이제 함께 돌아보는 시간을 가져 볼까요?`;
+  return `${hostBar(msg)}${pending}
+  <section class="glass pad" style="margin-bottom:16px;text-align:center">
+    <span class="pill">최종 점수 = 자산 50 + 안정성 30 + 위기 대응 20</span>
+    <h1>🏆 우리 팀의 재무 성적표</h1>
+  </section>
+  <section class="podium">${rs.map((r,k)=>`
+    <div class="rank glass" style="animation:pop .4s ${k*.08}s both">
+      <span class="medal">${medals[k]||`${k+1}위`}</span>
+      <b style="display:flex;align-items:center;gap:8px;font-size:18px"><span class="dot" style="background:${r.t.color};color:${r.t.color}"></span>${esc(r.t.name)}</b>
+      <div class="total">${r.total}<small> 점</small></div>
+      <div class="bars">
+        <div><label><span>💰 자산 (${fmt(r.a)})</span><span>${r.assetScore}/50</span></label><div class="bar"><i style="width:${r.assetScore*2}%"></i></div></div>
+        <div><label><span>🧱 안정성·분산</span><span>${r.stab}/30</span></label><div class="bar g"><i style="width:${r.stab/30*100}%"></i></div></div>
+        <div><label><span>🛡️ 위기 대응</span><span>${r.crisis}/20</span></label><div class="bar y"><i style="width:${r.crisis*5}%"></i></div></div>
+      </div>
+      <div class="its" style="margin-top:12px;font-size:20px;letter-spacing:2px">${r.t.items.map(x=>`<span style="${x.value>0?'':'opacity:.25;filter:grayscale(1)'}">${IT(x.id).emoji}</span>`).join('')}</div>
+      <ul class="insight">${r.ins.map(s=>`<li>${s}</li>`).join('')}</ul>
+    </div>`).join('')}</section>
+  <section class="debrief">
+    <div class="glass pad"><h2>🗣️ 디브리핑 질문</h2>
+      <ol class="qlist">
+        <li>실제 가치보다 비싸게 산 품목은 무엇이었나요? 왜 그 가격까지 불렀나요?<small>→ 경쟁과 분위기에 끌려가는 소비 심리</small></li>
+        <li>매달 빠져나간 할부·구독·보험료는 우리 팀 자산을 얼마나 갉아먹었나요?<small>→ PART 1 · 월급이 사라지는 함정과 보험 다이어트</small></li>
+        <li>위기 카드가 왔을 때 우리 팀을 지켜준 것은 무엇이었나요?<small>→ 비상금 3~6개월 + 실손 1개 = 안전망이 먼저</small></li>
+        <li>"원금 보장 월 5%"에 끌렸던 이유는 무엇인가요?<small>→ PART 4 · 위험과 수익은 함께 간다</small></li>
+        <li>연말정산·정부 기여금처럼 "돌려받고 얹어 받는 돈"은 무엇이 있었나요?<small>→ PART 3·5 · 숨은 세금과 나라가 얹어주는 돈</small></li>
+      </ol></div>
+    <div class="glass pad"><h2>🧭 오늘의 핵심 메시지</h2>
+      <p class="muted">돈 관리는 순서가 전부입니다. 아래에서 위로 쌓으세요.</p>
+      <div class="pyramid">
+        <div class="p3">🧾 3단계 · 세테크·노후<br><small>연금저축·IRP · 연말정산 챙기기</small></div>
+        <div class="p2">💰 2단계 · 목적자금 저축<br><small>청약통장 · 청년미래적금 · 적금</small></div>
+        <div class="p1">🛟 1단계 · 안전망·지출 관리<br><small>비상금 + 실손 1개 · 할부·구독 줄이기</small></div>
+      </div>
+      <div class="cta"><button class="btn ghost" data-action="go" data-v="event">↩ 이벤트 다시 보기</button><button class="btn danger" data-action="reset">🔄 새 게임</button></div>
+    </div>
+  </section>
+  <section class="glass pad notes">
+    <h2>✅ 오늘 바로 할 5가지</h2>
+    <div class="todo">
+      <div><b>1</b>월급날 "저축 먼저"<br>자동이체 세팅</div>
+      <div><b>2</b>파킹통장에<br>비상금 통장 만들기</div>
+      <div><b>3</b>청년주택드림<br>청약통장 가입·전환</div>
+      <div><b>4</b>청년미래적금<br>모집 알림 신청</div>
+      <div><b>5</b>연금저축 계좌 개설<br>월 10만 원부터</div>
+    </div>
+    <div class="promise">✍️ <b>나의 약속</b> 나는 매달 <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>만 원을 먼저 저축하고, <u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u> 계좌를 시작한다</div>
+  </section>
+  <section class="glass pad notes">
+    <h2>📚 오늘의 금융 노트 모아보기</h2>
+    <p class="muted" style="margin-bottom:12px">품목을 눌러 "왜 그런지"와 관리 TIP을 다시 확인하세요.</p>
+    <div class="notegrid">${ITEMS.map(it=>`<details class="note"><summary>${it.emoji} ${it.name} <span class="tag ${it.risk}" style="margin-left:6px">${RISK[it.risk]}</span></summary>${learnBox(it.name,`${it.part} · 감정가 ${fmt(it.value)}`,it.why,it.tips)}</details>`).join('')}</div>
+  </section>`;
+}
+
+/* ===================== 이벤트 바인딩 ===================== */
+const H={
+  go:v=>{ if(v!=='setup'&&!S.teams.length) return toast('먼저 게임을 시작해 주세요');
+          stopCountdown(); if(v==='event'&&!S.deck.length) buildDeck(); S.step=v; save(); render(); window.scrollTo({top:0,behavior:'smooth'}); },
+  count:v=>{S.setup.count=Math.max(2,Math.min(10,S.setup.count+ +v));save();render()},
+  rounds:v=>{S.setup.rounds=Math.max(3,Math.min(10,S.setup.rounds+ +v));save();render()},
+  start:()=>{ initAudio(); if(S.teams.length){openModal('<h2>새 게임을 시작할까요?</h2><p class="muted">진행 중인 경매와 이벤트 기록이 모두 초기화됩니다.</p>','<button class="btn ghost" data-action="closeModal">취소</button><button class="btn primary" data-action="startYes">새로 시작</button>')} else startGame(); },
+  startYes:()=>{closeModal();startGame()},
+  reset:()=>openModal('<h2>새 게임을 준비할까요?</h2><p class="muted">팀 설정 화면으로 돌아가며 현재 기록이 지워집니다.</p>','<button class="btn ghost" data-action="closeModal">취소</button><button class="btn danger" data-action="resetYes">초기화</button>'),
+  resetYes:()=>{closeModal();snap();stopCountdown();const st=S.setup,snd=S.sound;S={...fresh(),setup:st,sound:snd};save();render()},
+  raise:(v,b)=>raise(+b.dataset.t,+v),
+  undoBid, countdown, hammer, pass:passItem, next:()=>nextItem(),
+  jump:v=>{stopCountdown();S.idx=+v;const it=ITEMS[S.idx];const s=S.sales[it.id];
+    if(s&&s.passed){delete S.sales[it.id]}
+    if(s&&!s.passed){S.reveal=it.id;S.host=`${it.emoji} <b>${it.name}</b>은(는) 이미 <b>${esc(S.teams[s.team].name)}</b>에 <b>${fmt(s.price)}</b>로 낙찰된 품목입니다. 학습 노트를 다시 볼까요?`}
+    else{S.reveal=null;openLot()}
+    save();render()},
+  draw,
+  undo:()=>{ if(!hist.length) return toast('되돌릴 작업이 없어요'); stopCountdown(); S=JSON.parse(hist.pop()); save(); render(); toast('한 단계 되돌렸어요'); },
+  sound:()=>{S.sound=!S.sound;initAudio();save();render();toast(S.sound?'효과음 켜짐':'효과음 꺼짐')},
+  rules:()=>openModal(`<h2>📖 게임 규칙</h2>
+    <ol>
+      <li>팀마다 같은 금액의 가상자금으로 시작합니다.</li>
+      <li>경매사 <b>돈쌤</b>이 품목을 소개하고 시작가를 부릅니다. 첫 팀은 <b>"✋ 응찰"</b>, 이후 팀은 <b>+10 / +50 / +100</b>으로 가격을 올립니다.</li>
+      <li>더 이상 응찰이 없으면 <b>"⏱ 카운트다운"</b>을 누르세요. "하나·둘·셋" 동안 새 응찰이 없으면 자동으로 <b>낙찰</b>됩니다. 카운트다운 중 응찰이 들어오면 다시 시작합니다.</li>
+      <li>낙찰되면 <b>실제 가치(감정가)</b>와 함께 "왜 그런지", 관리 TIP이 담긴 학습 노트가 공개됩니다.</li>
+      <li>할부·구독·보험료 품목은 이벤트 카드마다 정해진 금액이 자동으로 빠져나갑니다.</li>
+      <li>경매가 끝나면 인생 이벤트 카드를 한 장씩 뽑습니다. 위기 지출은 <b>비상금 → 현금</b> 순서로 나가고, 둘 다 부족하면 가장 비싼 자산을 <b>70% 가격에 헐값 매도</b>합니다.</li>
+      <li>최종 점수 = 자산 규모 50점 + 안정성·분산 30점 + 위기 대응 20점</li>
+    </ol>
+    <p class="muted" style="font-size:13px">진행 팁: 실수로 눌렀다면 '응찰 취소'나 상단의 '되돌리기'를 누르세요. 진행 상황은 이 브라우저에 자동 저장됩니다.</p>`),
+  full:()=>{try{const d=document;if(d.fullscreenElement){d.exitFullscreen()}else{const p=d.documentElement.requestFullscreen&&d.documentElement.requestFullscreen();if(p&&p.catch)p.catch(()=>toast('이 화면에서는 전체화면을 지원하지 않아요'))}}catch(e){toast('이 화면에서는 전체화면을 지원하지 않아요')}},
+  closeModal
+};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;const f=H[b.dataset.action];if(f)f(b.dataset.v,b)});
+document.addEventListener('input',e=>{
+  const f=e.target.dataset.field;if(!f)return;
+  if(f==='name')S.setup.names[+e.target.dataset.i]=e.target.value;
+  if(f==='cash')S.setup.cash=+e.target.value;
+  save();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+document.getElementById('hammerChar').innerHTML=donSvg('60 40 340 455');
+render();
+</script>
+</body>
+</html>

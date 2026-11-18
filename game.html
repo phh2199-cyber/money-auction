@@ -2860,9 +2860,8 @@ function openLot(){
   const it=ITEMS[S.idx];
   S.auc={price:startPrice(it),leader:null,bids:[]};
   S.host=pick([
-    `자, <b>${S.idx+1}번째 품목</b>입니다! ${it.emoji} <b>${it.name}</b>! 시작가 <b>${fmt(startPrice(it))}</b>부터 갑니다. 손 드실 팀 계십니까?`,
-    `다음 품목 나갑니다! ${it.emoji} <b>${it.name}</b>, "${it.sub}"! 시작가는 <b>${fmt(startPrice(it))}</b>입니다!`,
-    `이번엔 ${it.emoji} <b>${it.name}</b>입니다. 실제 가치는 낙찰 후에 공개됩니다. 시작가 <b>${fmt(startPrice(it))}</b>!`
+    `다음 출품작입니다. 로트 <b>${S.idx+1}번</b>, ${it.emoji} <b>${it.name}</b>. 시작가 <b>${fmt(startPrice(it))}</b>에 모시겠습니다.`,
+    `이번 출품작은 ${it.emoji} <b>${it.name}</b>입니다. ${it.sub}. <b>${fmt(startPrice(it))}</b>부터 시작하겠습니다.`
   ]);
 }
 function stopCountdown(){if(cdTimer){clearTimeout(cdTimer);cdTimer=null}cdStep=0}
@@ -2877,8 +2876,10 @@ function raise(ti,inc){
   if(!overtime)stopCountdown();
   a.price=np;a.leader=ti;a.bids.push({team:ti,price:np});
   const n=a.bids.length;
-  S.host=n===1?pick([`<b>${esc(t.name)}</b>, 시작가 <b>${fmt(np)}</b> 응찰! 첫 손님 감사합니다. 더 없습니까?`,`좋습니다! <b>${esc(t.name)}</b>에서 <b>${fmt(np)}</b>! 다른 팀은요?`])
-    :pick([`<b>${esc(t.name)}</b> <b>${fmt(np)}</b>! 더 없습니까?`,`오~ <b>${esc(t.name)}</b>에서 <b>${fmt(np)}</b> 나왔습니다!`,`<b>${fmt(np)}</b>! <b>${esc(t.name)}</b>가 치고 나갑니다! 더 부르실 분?`,`경쟁이 뜨겁네요! <b>${esc(t.name)}</b> <b>${fmt(np)}</b>!`,`<b>${fmt(np)}</b>까지 올라왔습니다! 정말 그만한 가치가 있을까요? 🤔`]);
+  const tn=`<b>${esc(t.name)}</b>`,pp=`<b>${fmt(np)}</b>`;
+  S.host=n===1?pick([`${pp}, ${tn} 받았습니다. <b>${fmt(np+50)}</b> 계십니까?`,`${tn}에서 시작가 ${pp}에 응찰하셨습니다. 다음 호가 <b>${fmt(np+10)}</b>, 계십니까?`])
+    :n>=6?pick([`${pp}까지 올라왔습니다. 현재 ${tn}. 이 가격, 정말 그만한 가치가 있을까요?`,`${pp}, ${tn}. 경합이 뜨겁습니다! 더 계십니까?`])
+    :pick([`${pp}, ${tn}. <b>${fmt(np+50)}</b> 계십니까?`,`${tn}, ${pp} 받았습니다. 더 계십니까?`,`${pp} 나왔습니다. 현재 ${tn}, 경합 중입니다!`,`${pp}, ${tn}입니다. <b>${fmt(np+10)}</b>도 받겠습니다.`]);
   flashPrice=true;sfx.bid();save();render();
 }
 function undoBid(){
@@ -2886,14 +2887,14 @@ function undoBid(){
   snap();stopCountdown();a.bids.pop();
   const last=a.bids[a.bids.length-1];
   if(last){a.price=last.price;a.leader=last.team}else{a.price=startPrice(ITEMS[S.idx]);a.leader=null}
-  S.host=last?`응찰 하나 취소합니다. 현재 최고가는 <b>${esc(S.teams[last.team].name)}</b> <b>${fmt(last.price)}</b>!`:'응찰이 모두 취소되었습니다. 다시 시작가부터 갑니다!';
+  S.host=last?`응찰 하나를 취소하겠습니다. 현재 <b>${fmt(last.price)}</b>, <b>${esc(S.teams[last.team].name)}</b>입니다.`:'응찰을 모두 취소하고, 시작가부터 다시 모시겠습니다.';
   save();render();
 }
 function countdown(){
   initAudio();
   const a=S.auc;if(!a||a.leader===null) return toast('응찰한 팀이 없어요. 유찰하거나 응찰을 받아 주세요');
   if(cdTimer) return;
-  const lines=[()=>`<b>${esc(S.teams[a.leader].name)}</b> <b>${fmt(a.price)}</b>! 하나… 갑니다!`,()=>`<b>${fmt(a.price)}</b>! 둘…!`,()=>`마지막 기회! <b>${fmt(a.price)}</b>! 더 없습니까?!`];
+  const lines=[()=>`<b>${fmt(a.price)}</b>, <b>${esc(S.teams[a.leader].name)}</b>. 더 이상 안 계십니까?`,()=>`<b>${fmt(a.price)}</b>. 마지막으로 여쭙겠습니다.`,()=>`더 없으시면… 낙찰하겠습니다.`];
   const tick=()=>{
     if(cdStep<3){S.host=lines[cdStep]();cdStep++;sfx.tick();say(S.host);render();cdTimer=setTimeout(tick,autoOn()&&voiceOn()?1700:1200)}
     else{cdTimer=null;cdStep=0;hammer()}
@@ -2909,10 +2910,10 @@ function hammer(){
   t.cash-=price;t.items.push({id:it.id,paid:price,value:it.value});
   S.sales[it.id]={team:a.leader,price,bids:a.bids.length};S.reveal=it.id;
   const diff=price-it.value;
-  S.host=`🔨 <b>${esc(t.name)}</b>, <b>${fmt(price)}</b>에 낙찰! 자, 실제 가치는… <b>${fmt(it.value)}</b>입니다! `+
-    (it.id==='scam'?'과연 이 가치가 끝까지 유지될까요? 😏':it.monthly?`앞으로 이벤트 카드마다 ${it.monthly.label} <b>${fmt(it.monthly.amt)}</b>씩 빠져나간다는 것, 잊지 마세요!`:
-     diff>0?pick([`${fmt(diff)} 비싸게 사셨네요. 경쟁 분위기에 휩쓸리셨나요? 😅`,`${fmt(diff)} 웃돈을 주셨습니다. "이기고 싶은 마음"도 소비 심리입니다!`])
-     :diff<0?pick([`${fmt(-diff)}이나 싸게 사셨어요! 현명한 입찰입니다 👏`,`가치보다 ${fmt(-diff)} 저렴하게! 훌륭합니다!`]):'딱 정가에 사셨네요. 정확한 눈썰미입니다!');
+  S.host=`🔨 <b>${fmt(price)}</b>, <b>${esc(t.name)}</b>께 낙찰되었습니다! 축하드립니다. 이 출품작의 실제 가치는… <b>${fmt(it.value)}</b>입니다. `+
+    (it.id==='scam'?'과연 이 가치가 끝까지 지켜질까요?':it.monthly?`참고로 이 출품작은 이벤트 카드마다 ${it.monthly.label} <b>${fmt(it.monthly.amt)}</b>씩 빠져나갑니다.`:
+     diff>0?pick([`실제 가치보다 ${fmt(diff)} 높게 낙찰받으셨네요. 경합의 열기, 이것도 소비 심리입니다.`,`${fmt(diff)}을 더 내셨습니다. 이기고 싶은 마음도 비용이 됩니다.`])
+     :diff<0?pick([`실제 가치보다 ${fmt(-diff)} 낮게 낙찰받으셨습니다. 현명한 응찰입니다!`,`${fmt(-diff)} 저렴하게 가져가셨네요. 훌륭한 안목입니다.`]):'정확히 실제 가치에 낙찰되었습니다. 대단한 안목입니다.');
   save();render();showHammer(`${t.name} · ${fmt(price)}`);
 }
 function showHammer(sub){
@@ -2924,13 +2925,13 @@ function showHammer(sub){
 function passItem(){
   const it=ITEMS[S.idx];if(S.sales[it.id]&&!S.sales[it.id].passed) return;
   snap();stopCountdown();S.sales[it.id]={passed:true};
-  nextItem(`아무도 없나요? ${it.emoji} <b>${it.name}</b>은(는) <b>유찰</b>입니다! 때로는 "안 사는 것"도 좋은 선택이죠.`);
+  nextItem(`응찰이 없어, ${it.emoji} <b>${it.name}</b>은(는) <b>유찰</b>되었습니다. 때로는 사지 않는 것도 좋은 선택입니다.`);
 }
 function nextItem(prefix){
   stopCountdown();S.reveal=null;
   for(let k=1;k<=ITEMS.length;k++){const j=(S.idx+k)%ITEMS.length;if(!S.sales[ITEMS[j].id]){S.idx=j;openLot();if(prefix)S.host=prefix+' '+S.host;save();render();return}}
   S.idx=ITEMS.length;S.auc=null;
-  S.host=(prefix?prefix+' ':'')+'모든 품목의 경매가 끝났습니다! 🎉 이제 <b>인생 이벤트 카드</b>로 여러분의 선택이 어떤 결과를 낳는지 확인해 봅시다!';
+  S.host=(prefix?prefix+' ':'')+'이것으로 오늘의 모든 출품작 경매를 마치겠습니다. 이제 <b>인생 이벤트 카드</b>로 여러분의 선택이 어떤 결과를 낳는지 확인해 보겠습니다.';
   save();render();
 }
 
@@ -2948,7 +2949,7 @@ function startGame(){
   S.teams=Array.from({length:st.count},(_,i)=>({name:(st.names[i]||DEFAULT_NAMES[i]||`${i+1}팀`).trim()||`${i+1}팀`,color:COLORS[i],cash:st.cash,items:[],crisisFail:0,crisisDefended:0,fees:0}));
   buildDeck();S.idx=0;openLot();
   const f=ITEMS[0];
-  S.host=`안녕하세요, 오늘 경매를 진행할 <b>${HOST}</b>입니다! 🎩 각 팀에 <b>${fmt(st.cash)}</b>씩 드렸습니다. 첫 월급, 어디에 쓰시겠습니까? 첫 번째 품목은 ${f.emoji} <b>${f.name}</b>! 시작가 <b>${fmt(startPrice(f))}</b>부터 갑니다!`;
+  S.host=`안녕하십니까, 오늘 경매를 진행할 <b>${HOST}</b>입니다. 각 팀에 <b>${fmt(st.cash)}</b>씩 준비해 드렸습니다. 첫 월급, 어디에 쓰시겠습니까? 첫 번째 출품작은 ${f.emoji} <b>${f.name}</b>, 시작가 <b>${fmt(startPrice(f))}</b>입니다.`;
   save();render();window.scrollTo({top:0,behavior:'smooth'});
 }
 function draw(){
@@ -2962,7 +2963,7 @@ function draw(){
   });
   S.last={id:ev.id,res};S.drawn++;justDrew=true;
   const best=[...res].sort((a,b)=>b.delta-a.delta)[0],worst=[...res].sort((a,b)=>a.delta-b.delta)[0];
-  S.host=`${ev.emoji} <b>${ev.title}</b>${ev.title.endsWith('!')?'':'!'} `+(worst.delta<0?`가장 타격이 큰 팀은 <b>${esc(S.teams[worst.team].name)}</b>(${fmt(worst.delta)})이네요. `:'')+(best.delta>0?`<b>${esc(S.teams[best.team].name)}</b>은(는) 웃었습니다! `:'')+'아래 학습 노트에서 이유를 함께 볼까요?';
+  S.host=`${ev.emoji} <b>${ev.title}</b>${ev.title.endsWith('!')?'':'!'} `+(worst.delta<0?`가장 타격이 큰 팀은 <b>${esc(S.teams[worst.team].name)}</b>, ${fmt(worst.delta)}입니다. `:'')+(best.delta>0?`반면 <b>${esc(S.teams[best.team].name)}</b>은(는) 자산이 늘었습니다. `:'')+'아래 학습 노트에서 이유를 함께 살펴보겠습니다.';
   sfx.flip();save();render();
 }
 function scores(){
@@ -3001,21 +3002,42 @@ const autoOn=()=>!!(S.setup&&S.setup.auto)&&S.teams.length>0&&!AUTO.paused;
 const voiceOn=()=>!!(S.setup&&S.setup.voice)&&('speechSynthesis' in window);
 const plain=h=>String(h).replace(/<[^>]+>/g,'').replace(/[\p{Extended_Pictographic}️‍]/gu,'').replace(/→/g,', ').replace(/·/g,', ').replace(/…/g,', ').replace(/\s+/g,' ').trim();
 let koVoice=null;
-function pickVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang));koVoice=vs.find(v=>/google/i.test(v.name))||vs.find(v=>/yuna|heami|sunhi|injoon|seoyeon/i.test(v.name))||vs[0]||null}catch(e){}}
-if('speechSynthesis' in window){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}}
+const FEMALE=/sunhi|jimin|seohyeon|soonbok|yujin|yuna|heami|google 한국의|google korean|female|여성|sora|nara/i;
+const MALE=/injoon|hyunsu|bongjin|gookmin|minsu|jinho|male|남성/i;
+function koVoices(){try{return speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang))}catch(e){return []}}
+function voiceScore(v){const n=v.name;let sc=0;
+  if(/natural|neural|online/i.test(n))sc+=40;
+  if(/sunhi/i.test(n))sc+=30;else if(/jimin|seohyeon|yujin|soonbok/i.test(n))sc+=22;else if(/google/i.test(n))sc+=25;else if(/yuna/i.test(n))sc+=20;else if(/heami/i.test(n))sc+=8;
+  if(FEMALE.test(n))sc+=10;if(MALE.test(n))sc-=100;return sc}
+function pickVoice(){const vs=koVoices();const want=S&&S.setup&&S.setup.voiceName;
+  koVoice=(want&&vs.find(v=>v.name===want))||vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null}
+if('speechSynthesis' in window){pickVoice();try{speechSynthesis.onvoiceschanged=()=>{pickVoice();if(S.step==='setup')render()}}catch(e){}}
 function hush(){AUTO.token++;try{if('speechSynthesis' in window)speechSynthesis.cancel()}catch(e){}}
+const ttsText=h=>plain(h).replace(/(\d)만원/g,'$1만 원').replace(/\s*!\s*/g,'! ').replace(/["“”]/g,'').replace(/\s+/g,' ').trim();
+function chunks(txt){
+  const parts=txt.match(/[^.!?。]+[.!?。]*/g)||[txt];
+  return parts.map(x=>x.trim()).filter(Boolean).map(x=>{
+    const call=/원/.test(x)&&x.length<34;            // 호가 외치는 짧은 문장
+    const ask=/계십니까|없으십니까|여쭙겠습니다/.test(x);
+    return {t:x,rate:call||ask?1.08:1.0,pitch:call?1.12:ask?1.1:1.04};
+  });
+}
+function utter(c,base){const u=new SpeechSynthesisUtterance(c.t);u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.rate=Math.max(.7,Math.min(1.4,c.rate*base));u.pitch=c.pitch;u.volume=1;return u}
 function speak(html,cb){
-  const tok=++AUTO.token;const txt=plain(html);
+  const tok=++AUTO.token;const txt=ttsText(html);
   const done=()=>{if(tok!==AUTO.token)return;clearTimeout(fb);if(cb)cb()};
-  const est=Math.min(14000,Math.max(1800,txt.length*95));
+  const base=+(S.setup&&S.setup.rate)||1;
+  const est=Math.min(16000,Math.max(1800,txt.length*95/base));
   let fb=setTimeout(done,voiceOn()?est+4000:est);
   if(!voiceOn()||!txt) return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.rate=1.05;u.pitch=1.05;
-    u.onend=()=>setTimeout(done,250);u.onerror=()=>setTimeout(done,250);
+  try{speechSynthesis.cancel();const cs=chunks(txt);
+    cs.forEach((c,i)=>{const u=utter(c,base);if(i===cs.length-1){u.onend=()=>setTimeout(done,200);u.onerror=()=>setTimeout(done,200)}speechSynthesis.speak(u)});
     const av=document.querySelector('.avatar');if(av){av.classList.remove('talk');void av.offsetWidth;av.classList.add('talk')}
-    speechSynthesis.speak(u)}catch(e){}
+  }catch(e){}
 }
-function say(html){if(voiceOn()&&autoOn()){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(plain(html));u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.rate=1.1;u.pitch=1.05;speechSynthesis.speak(u)}catch(e){}}}
+function say(html){if(voiceOn()&&autoOn()){try{speechSynthesis.cancel();const base=+(S.setup&&S.setup.rate)||1;chunks(ttsText(html)).forEach(c=>speechSynthesis.speak(utter(c,base*1.05)))}catch(e){}}}
+function testVoice(){try{pickVoice();speechSynthesis.cancel();const base=+(S.setup.rate)||1;
+  chunks('안녕하십니까, 오늘 경매를 진행할 경매사 돈쌤입니다. 시작가 100만 원에 모시겠습니다. 150만 원, 청렴팀. 200만 원 계십니까? 더 없으시면… 낙찰하겠습니다!').forEach(c=>speechSynthesis.speak(utter(c,base)))}catch(e){toast('이 브라우저에서는 음성을 재생할 수 없어요')}}
 function later(ms,fn){clearTimeout(AUTO.timer);AUTO.timer=setTimeout(()=>{AUTO.timer=null;fn()},ms)}
 function stopIdle(){AUTO.idleUntil=0;paintIdle()}
 function paintIdle(){
@@ -3060,19 +3082,19 @@ function schedule(){
   AUTO.key=key;clearTimeout(AUTO.timer);stopIdle();
   const wait=Math.max(3,+S.setup.wait||8);
   if(S.step==='auction'){
-    if(S.idx>=ITEMS.length){speak('모든 품목의 경매가 끝났습니다! 이제 인생 이벤트 카드로 선택의 결과를 확인해 봅시다!',()=>later(1500,()=>H.go('event')));return}
+    if(S.idx>=ITEMS.length){speak('이것으로 오늘의 모든 출품작 경매를 마치겠습니다. 이제 인생 이벤트 카드로 여러분의 선택이 어떤 결과를 낳는지 확인해 보겠습니다.',()=>later(1500,()=>H.go('event')));return}
     const it=ITEMS[S.idx];const sale=S.sales[it.id];
-    if(sale&&!sale.passed){AUTO.lot=null;speak(S.host,()=>speak(`핵심 팁! ${it.tips[0]}`,()=>later(1500,()=>nextItem())));return}
+    if(sale&&!sale.passed){AUTO.lot=null;speak(S.host,()=>speak(`오늘의 팁입니다. ${it.tips[0]}`,()=>later(1500,()=>nextItem())));return}
     if(!S.auc) return;
     const a=S.auc;
     if(AUTO.lot!==S.idx){
       AUTO.lot=S.idx;AUTO.plan=lotPlan();AUTO.bidStart=0;
       const first=ITEMS.length-itemsLeft()===0;
-      S.host=`${first?`안녕하세요, 경매사 <b>돈쌤</b>입니다! 각 팀에 <b>${fmt(S.setup.cash)}</b>씩 드렸어요. `:''}<b>${S.idx+1}번째 품목</b>, ${it.emoji} <b>${it.name}</b>! 시작가 <b>${fmt(a.price)}</b>입니다. 작전 타임 <b>${AUTO.plan.think}초</b> 드릴게요. 팀별로 상의하세요!`;
+      S.host=`${first?`안녕하십니까, 오늘 경매를 진행할 경매사 <b>돈쌤</b>입니다. 각 팀에 <b>${fmt(S.setup.cash)}</b>씩 준비해 드렸습니다. `:''}${first?'첫 번째':'다음'} 출품작입니다. 로트 <b>${S.idx+1}번</b>, ${it.emoji} <b>${it.name}</b>. 시작가 <b>${fmt(a.price)}</b>에 모시겠습니다. 팀별로 <b>${AUTO.plan.think}초</b> 동안 상의해 주십시오.`;
       render();
       speak(S.host,()=>{AUTO.mode='think';idle(AUTO.plan.think,()=>{
         if(S.auc&&S.auc.bids.length) return;
-        S.host=pick(['작전 타임 끝! 이제 응찰 받습니다. 손 드실 팀?','자, 결정하셨나요? 응찰 받겠습니다!']);render();
+        S.host=pick([`상의 시간 마치겠습니다. 시작가 <b>${fmt(S.auc.price)}</b>, 응찰하실 팀 계십니까?`,`자, 시작하겠습니다. <b>${fmt(S.auc.price)}</b>, 계십니까?`]);render();
         speak(S.host,()=>{AUTO.mode='bid';AUTO.bidStart=Date.now();idle(wait,()=>{if(S.auc&&S.auc.leader!==null)countdown();else passItem()})});
       })});
       return;
@@ -3080,7 +3102,7 @@ function schedule(){
     if(a.bids.length){
       if(!AUTO.bidStart)AUTO.bidStart=Date.now();
       const capLeft=AUTO.plan.cap*1000-(Date.now()-AUTO.bidStart);
-      if(capLeft<=0){S.host=`이 품목 응찰 시간이 다 됐습니다! <b>${fmt(a.price)}</b>에서 카운트다운 들어갑니다!`;render();speak(S.host,()=>countdown());return}
+      if(capLeft<=0){S.host=`시간 관계상 <b>${fmt(a.price)}</b>에서 마무리하겠습니다.`;render();speak(S.host,()=>countdown());return}
       AUTO.mode='bid';
       speak(S.host,()=>idle(Math.max(3,Math.min(wait,Math.ceil((AUTO.plan.cap*1000-(Date.now()-AUTO.bidStart))/1000))),()=>{if(S.auc&&S.auc.leader!==null)countdown()}));
     }
@@ -3090,13 +3112,13 @@ function schedule(){
     const total=S.deck.length;
     if(!S.last){speak(`경매는 끝났지만 인생은 이제부터입니다! ${total}장의 인생 이벤트 카드를 뽑아 볼까요?`,()=>later(800,draw));return}
     const ev=EV(S.last.id);
-    speak(`${S.host.replace('아래 학습 노트에서 이유를 함께 볼까요?','')} 핵심! ${ev.lesson}`,()=>{
+    speak(`${S.host.replace('아래 학습 노트에서 이유를 함께 살펴보겠습니다.','')} 오늘의 교훈입니다. ${ev.lesson}`,()=>{
       if(S.drawn<total) later(3500,()=>{say('다음 카드!');later(900,draw)});
       else speak('모든 카드가 끝났습니다. 두구두구… 최종 결과를 발표합니다!',()=>later(1000,()=>H.go('result')));
     });
     return;
   }
-  if(S.step==='result'){clockStop();const top=scores()[0];speak(`최종 1위는… ${top.t.name}! 총 ${top.total}점입니다! 이 게임의 승자는 돈이 가장 많은 팀이 아니라 흔들려도 무너지지 않는 팀입니다. 이제 함께 돌아볼까요?`);return}
+  if(S.step==='result'){clockStop();const top=scores()[0];speak(`최종 결과를 발표하겠습니다. 1위는… ${top.t.name}, ${top.total}점입니다! 축하드립니다. 오늘의 승자는 돈이 가장 많은 팀이 아니라, 흔들려도 무너지지 않는 팀입니다. 이제 함께 돌아보겠습니다.`);return}
 }
 function autoBar(){
   if(!S.teams.length) return '';
@@ -3137,6 +3159,15 @@ function learnBox(title,badge,why,tips){
     <div class="lsec"><b>✅ 관리 TIP</b><ul>${tips.map(t=>`<li>${t}</li>`).join('')}</ul></div></div>`;
 }
 
+function voiceField(st){
+  const vs=koVoices().slice().sort((a,b)=>voiceScore(b)-voiceScore(a));
+  if(!vs.length)return `<div class="field"><span>음성 선택</span><small class="muted">한국어 음성이 없어요. <b>엣지</b> 또는 <b>크롬</b>을 권장해요.</small></div>`;
+  const cur=koVoice?koVoice.name:'';
+  return `<div class="field"><span>음성 선택<br><small class="muted" style="font-size:12px">추천: 엣지의 'SunHi Online (Natural)'</small></span>
+      <select data-field="voiceName" style="max-width:240px">${vs.map(v=>`<option value="${esc(v.name)}" ${v.name===cur?'selected':''}>${MALE.test(v.name)?'👨':'👩'} ${esc(v.name.replace(/Microsoft |Google /,''))}</option>`).join('')}</select></div>
+    <div class="field"><span>말하기 속도</span><div class="seg">${[[0.92,'차분하게'],[1,'보통'],[1.1,'빠르게']].map(([r,l])=>`<button class="${(+st.rate||1)===r?'on':''}" data-action="rate" data-v="${r}">${l}</button>`).join('')}</div></div>
+    <div class="field"><span>미리 듣기</span><button class="btn ghost sm" data-action="testVoice">🔊 돈쌤 목소리 들어보기</button></div>`;
+}
 function vSetup(){
   const st=S.setup;
   return `
@@ -3158,6 +3189,7 @@ function vSetup(){
       <div class="field"><span>목표 진행 시간<br><small class="muted" style="font-size:12px">작전 타임이 자동으로 조절돼요</small></span><div class="seg">${[15,20,25,30].map(m=>`<button class="${(+st.minutes||20)===m?'on':''}" data-action="minutes" data-v="${m}">${m}분</button>`).join('')}</div></div>
       <div class="field"><span>응찰 사이 대기 시간<br><small class="muted" style="font-size:12px">마지막 응찰 뒤 기다리는 시간</small></span><div class="stepper"><button data-action="wait" data-v="-1">−</button><b>${st.wait}초</b><button data-action="wait" data-v="1">+</button></div></div>
       <div class="field"><span>돈쌤 목소리</span><div class="seg"><button class="${st.voice?'on':''}" data-action="setVoice" data-v="1">🗣️ 켜기</button><button class="${st.voice?'':'on'}" data-action="setVoice" data-v="0">🔈 끄기</button></div></div>
+      ${st.voice?voiceField(st):''}
       <div class="field"><span>이벤트 카드 수</span><div class="stepper"><button data-action="rounds" data-v="-1">−</button><b>${st.rounds}장</b><button data-action="rounds" data-v="1">+</button></div></div>
       <p class="muted" style="font-size:13px;margin-top:10px">💡 '갑작스러운 입원', '첫 배당금', '리딩방 사기 적발' 카드는 항상 포함되며, 사기 적발은 마지막에 공개됩니다.</p>
     </div>
@@ -3278,7 +3310,7 @@ function vResult(){
   if(!S.teams.length) return vSetup();
   const rs=scores();const medals=['🥇','🥈','🥉'];const top=rs[0];
   const pending=S.drawn<S.deck.length?`<div class="glass pad" style="margin-bottom:14px">⏳ 아직 이벤트 카드가 ${S.deck.length-S.drawn}장 남았어요. 지금 점수는 중간 결과입니다. <button class="btn ghost sm" data-action="go" data-v="event">이벤트로 돌아가기</button></div>`:'';
-  const msg=`최종 1위는… <b>${esc(top.t.name)}</b>! 🎉 총 <b>${top.total}점</b>입니다. 기억하세요. 이 게임의 승자는 돈이 가장 많은 팀이 아니라 <b>흔들려도 무너지지 않는 팀</b>입니다. 이제 함께 돌아보는 시간을 가져 볼까요?`;
+  const msg=`최종 결과를 발표하겠습니다. 1위는… <b>${esc(top.t.name)}</b>, <b>${top.total}점</b>입니다! 축하드립니다. 오늘의 승자는 돈이 가장 많은 팀이 아니라 <b>흔들려도 무너지지 않는 팀</b>입니다. 이제 함께 돌아보겠습니다.`;
   return `${hostBar(msg)}${pending}
   <section class="glass pad" style="margin-bottom:16px;text-align:center">
     <span class="pill">최종 점수 = 자산 50 + 안정성 30 + 위기 대응 20</span>
@@ -3356,6 +3388,8 @@ const H={
   setAuto:v=>{S.setup.auto=v==='1';save();render()},
   setVoice:v=>{S.setup.voice=v==='1';if(!S.setup.voice)hush();save();render()},
   minutes:v=>{S.setup.minutes=+v;save();render()},
+  rate:v=>{S.setup.rate=+v;save();render();testVoice()},
+  testVoice:()=>testVoice(),
   wait:v=>{S.setup.wait=Math.max(3,Math.min(15,(+S.setup.wait||6)+ +v));save();render()},
   toggleAuto:()=>{S.setup.auto=!S.setup.auto;AUTO.paused=false;resetAuto();stopCountdown();AUTO.lot=null;if(!S.setup.auto)clockStop();save();render();toast(S.setup.auto?'돈쌤 자동 진행을 시작해요':'강사 수동 진행으로 바꿨어요')},
   toggleVoice:()=>{S.setup.voice=!S.setup.voice;if(!S.setup.voice)hush();else AUTO.key=null;save();render()},
@@ -3383,6 +3417,7 @@ document.addEventListener('input',e=>{
   const f=e.target.dataset.field;if(!f)return;
   if(f==='name')S.setup.names[+e.target.dataset.i]=e.target.value;
   if(f==='cash')S.setup.cash=+e.target.value;
+  if(f==='voiceName'){S.setup.voiceName=e.target.value;pickVoice()}
   save();
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
